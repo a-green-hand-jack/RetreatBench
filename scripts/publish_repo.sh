@@ -30,7 +30,7 @@ gh repo create "${OWNER}/${REPO}" \
   "--${VISIBILITY}" \
   --description "${DESCRIPTION}"
 
-REMOTE_URL="https://github.com/${OWNER}/${REPO}.git"
+REMOTE_URL="git@github.com:${OWNER}/${REPO}.git"
 if git remote get-url origin >/dev/null 2>&1; then
   git remote set-url origin "${REMOTE_URL}"
 else
