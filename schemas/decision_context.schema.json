@@ -1,0 +1,415 @@
+{
+  "$defs": {
+    "ContinuationOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "blocker_verified": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blocker Verified"
+        },
+        "condition": {
+          "enum": [
+            "neutral",
+            "goal-preservation",
+            "diagnostic",
+            "oracle-expert"
+          ],
+          "title": "Condition",
+          "type": "string"
+        },
+        "invalid_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Invalid Reason"
+        },
+        "native_context_resume": {
+          "title": "Native Context Resume",
+          "type": "boolean"
+        },
+        "progress_after": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Progress After"
+        },
+        "progress_before": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Progress Before"
+        },
+        "resume_tier": {
+          "$ref": "#/$defs/ResumeTier"
+        },
+        "same_agent": {
+          "title": "Same Agent",
+          "type": "boolean"
+        },
+        "same_model": {
+          "title": "Same Model",
+          "type": "boolean"
+        },
+        "state_hash_match": {
+          "title": "State Hash Match",
+          "type": "boolean"
+        },
+        "strict_residual_budget": {
+          "title": "Strict Residual Budget",
+          "type": "boolean"
+        },
+        "verifier_reward_after": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Verifier Reward After",
+          "type": "number"
+        },
+        "verifier_reward_before": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Verifier Reward Before",
+          "type": "number"
+        }
+      },
+      "required": [
+        "condition",
+        "resume_tier",
+        "same_agent",
+        "same_model",
+        "state_hash_match",
+        "strict_residual_budget",
+        "native_context_resume",
+        "verifier_reward_before",
+        "verifier_reward_after"
+      ],
+      "title": "ContinuationOutcome",
+      "type": "object"
+    },
+    "DifficultyEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "command_failure",
+            "test_failure",
+            "dependency_failure",
+            "resource_pressure",
+            "scientific_negative_result",
+            "verifier_failure",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "step_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Step Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "event_id",
+        "step_ids",
+        "kind",
+        "evidence"
+      ],
+      "title": "DifficultyEvent",
+      "type": "object"
+    },
+    "GoalStatus": {
+      "enum": [
+        "active",
+        "satisfied",
+        "unsatisfied",
+        "abandoned",
+        "blocked-justified",
+        "unknown"
+      ],
+      "title": "GoalStatus",
+      "type": "string"
+    },
+    "ResumeTier": {
+      "enum": [
+        "R1-native",
+        "R2-atif-replay",
+        "R3-workspace-only",
+        "R4-external"
+      ],
+      "title": "ResumeTier",
+      "type": "string"
+    },
+    "RetreatCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "minLength": 1,
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "detector": {
+          "minLength": 1,
+          "title": "Detector",
+          "type": "string"
+        },
+        "difficulty_event_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Difficulty Event Ids",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "goal_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Goal Ids",
+          "type": "array"
+        },
+        "step_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Step Ids",
+          "type": "array"
+        },
+        "subtype": {
+          "$ref": "#/$defs/RetreatSubtype"
+        }
+      },
+      "required": [
+        "candidate_id",
+        "subtype",
+        "step_ids",
+        "evidence",
+        "detector"
+      ],
+      "title": "RetreatCandidate",
+      "type": "object"
+    },
+    "RetreatSubtype": {
+      "enum": [
+        "scope_retreat",
+        "goal_substitution",
+        "premature_stop",
+        "indefinite_deferral",
+        "burden_shifting",
+        "meta_work_substitution",
+        "false_completion",
+        "unsupported_infeasibility"
+      ],
+      "title": "RetreatSubtype",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "benchmark": {
+      "minLength": 1,
+      "title": "Benchmark",
+      "type": "string"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/RetreatCandidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "completion_claim": {
+      "default": false,
+      "title": "Completion Claim",
+      "type": "boolean"
+    },
+    "continuations": {
+      "items": {
+        "$ref": "#/$defs/ContinuationOutcome"
+      },
+      "title": "Continuations",
+      "type": "array"
+    },
+    "difficulty_events": {
+      "items": {
+        "$ref": "#/$defs/DifficultyEvent"
+      },
+      "title": "Difficulty Events",
+      "type": "array"
+    },
+    "effective_recovery": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Effective Recovery"
+    },
+    "failure_acknowledged": {
+      "default": false,
+      "title": "Failure Acknowledged",
+      "type": "boolean"
+    },
+    "goal_retention": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Goal Retention",
+      "type": "number"
+    },
+    "infeasibility_claim": {
+      "default": false,
+      "title": "Infeasibility Claim",
+      "type": "boolean"
+    },
+    "invalid_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Invalid Reason"
+    },
+    "justified_blocker_verified": {
+      "default": false,
+      "title": "Justified Blocker Verified",
+      "type": "boolean"
+    },
+    "maintained_original_goal": {
+      "title": "Maintained Original Goal",
+      "type": "boolean"
+    },
+    "mandatory_goal_status": {
+      "additionalProperties": {
+        "$ref": "#/$defs/GoalStatus"
+      },
+      "title": "Mandatory Goal Status",
+      "type": "object"
+    },
+    "original_verifier_reward": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Original Verifier Reward",
+      "type": "number"
+    },
+    "partial_claim": {
+      "default": false,
+      "title": "Partial Claim",
+      "type": "boolean"
+    },
+    "provider_or_harness_forced_stop": {
+      "default": false,
+      "title": "Provider Or Harness Forced Stop",
+      "type": "boolean"
+    },
+    "residual_budget_sufficient": {
+      "title": "Residual Budget Sufficient",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "retreatbench.decision-context.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_name": {
+      "minLength": 1,
+      "title": "Task Name",
+      "type": "string"
+    },
+    "trial_id": {
+      "minLength": 1,
+      "title": "Trial Id",
+      "type": "string"
+    },
+    "voluntary_termination": {
+      "title": "Voluntary Termination",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema_version",
+    "trial_id",
+    "task_name",
+    "benchmark",
+    "original_verifier_reward",
+    "goal_retention",
+    "maintained_original_goal",
+    "voluntary_termination",
+    "residual_budget_sufficient"
+  ],
+  "title": "DecisionContext",
+  "type": "object"
+}

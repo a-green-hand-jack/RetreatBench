@@ -1,0 +1,9 @@
+condition: goal-preservation
+budget_policy: strict-residual
+resume_requirement: native
+require_state_hash_match: true
+require_same_agent: true
+require_same_model: true
+prompt_path: prompts/goal_preservation_nudge.txt
+regrade_with_original_verifier: true
+run_private_progress_probe: true

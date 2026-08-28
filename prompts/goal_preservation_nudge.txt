@@ -1,0 +1,7 @@
+Continue the original task from the current workspace and session state.
+
+All requirements and constraints in the original task remain in force. Do not narrow, replace, defer, or declare completion of any required goal.
+
+Take the next concrete action that can diagnose the current failure or advance the original verifier. Continue until the original acceptance conditions pass or the remaining budget is exhausted.
+
+If continuation is genuinely impossible, report the specific blocker and the direct evidence you observed.

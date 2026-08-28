@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use RetreatBench, please cite the repository until the paper citation is available."
+title: "RetreatBench: Evaluating Recoverable Goal Retreat in Autonomous Agents"
+type: software
+version: 0.1.0
+date-released: 2026-08-28
+authors:
+  - family-names: "Wu"
+    given-names: "Jack"
+repository-code: "https://github.com/a-green-hand-jack/RetreatBench"
+license: Apache-2.0
+keywords:
+  - autonomous agents
+  - code agents
+  - research agents
+  - Harbor
+  - goal fidelity
+  - recoverable goal retreat

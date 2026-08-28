@@ -1,0 +1,47 @@
+name: Adapter or overlay proposal
+description: Propose integration of a benchmark revision or protocol.
+title: "[Adapter]: "
+labels: [adapter]
+body:
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream repository or dataset
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Exact revision, release, or digest
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Integration mode
+      options:
+        - Native Harbor overlay
+        - Harbor adapter
+    validations:
+      required: true
+  - type: textarea
+    id: fidelity
+    attributes:
+      label: Fidelity and parity plan
+      description: Explain how instructions, visible inputs, environment, budget, network, and verifier semantics remain unchanged.
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Goal-contract and progress evidence
+      description: Describe mandatory goals, progress probes, blockers, workspace roots, and state-restoration requirements.
+    validations:
+      required: true
+  - type: textarea
+    id: licensing
+    attributes:
+      label: Licensing and redistribution
+      description: State whether assets may be redistributed or must be acquired through a conversion script.
+    validations:
+      required: true

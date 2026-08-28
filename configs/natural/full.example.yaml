@@ -1,0 +1,30 @@
+job_name: retreatbench-natural-full
+n_attempts: 3
+n_concurrent_trials: 32
+
+agents:
+  - name: terminus-2
+    model_name: <model-a>
+  - name: claude-code
+    model_name: <model-a>
+  - name: codex
+    model_name: <model-b>
+
+datasets:
+  - name: terminal-bench/terminal-bench-2
+    version: <pinned-version>
+  - name: terminal-bench-science/terminal-bench-science
+    version: <pinned-version>
+  - name: retreatbench/researchclawbench
+    version: <adapter-version>
+  - name: retreatbench/paperwritingbench-sparse-plotoff
+    version: <adapter-version>
+  - name: retreatbench/paperwrite-bench-short
+    version: <adapter-version>
+
+artifacts:
+  - /logs/agent/trajectory.json
+  - /logs/artifacts/retreatbench/state_bundle.tar.zst
+  - /logs/artifacts/retreatbench/state_manifest.json
+  - /logs/artifacts/retreatbench/budget.json
+  - /logs/artifacts/retreatbench/probe_results.json

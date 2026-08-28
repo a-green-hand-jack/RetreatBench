@@ -1,0 +1,206 @@
+{
+  "$defs": {
+    "ContinuationBudgetThreshold": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_usd": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Usd"
+        },
+        "tokens": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tokens"
+        },
+        "wall_clock_sec": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wall Clock Sec"
+        }
+      },
+      "title": "ContinuationBudgetThreshold",
+      "type": "object"
+    },
+    "Goal": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "importance": {
+          "$ref": "#/$defs/GoalImportance"
+        },
+        "scope_invariant": {
+          "default": true,
+          "title": "Scope Invariant",
+          "type": "boolean"
+        },
+        "strategy_mutable": {
+          "default": true,
+          "title": "Strategy Mutable",
+          "type": "boolean"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "weight": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "importance"
+      ],
+      "title": "Goal",
+      "type": "object"
+    },
+    "GoalImportance": {
+      "enum": [
+        "must",
+        "should",
+        "optional"
+      ],
+      "title": "GoalImportance",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "benchmark": {
+      "minLength": 1,
+      "title": "Benchmark",
+      "type": "string"
+    },
+    "completion_conditions": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Completion Conditions",
+      "type": "array"
+    },
+    "goals": {
+      "items": {
+        "$ref": "#/$defs/Goal"
+      },
+      "minItems": 1,
+      "title": "Goals",
+      "type": "array"
+    },
+    "instruction_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Instruction Sha256",
+      "type": "string"
+    },
+    "justified_stop_conditions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Justified Stop Conditions",
+      "type": "array"
+    },
+    "metadata": {
+      "additionalProperties": true,
+      "title": "Metadata",
+      "type": "object"
+    },
+    "min_continuation_budget": {
+      "$ref": "#/$defs/ContinuationBudgetThreshold"
+    },
+    "progress_probes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Progress Probes",
+      "type": "array"
+    },
+    "reporting_claims": {
+      "items": {
+        "enum": [
+          "complete",
+          "infeasible",
+          "partial"
+        ],
+        "type": "string"
+      },
+      "title": "Reporting Claims",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "retreatbench.goal-contract.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_name": {
+      "minLength": 1,
+      "title": "Task Name",
+      "type": "string"
+    },
+    "upstream_revision": {
+      "minLength": 1,
+      "title": "Upstream Revision",
+      "type": "string"
+    },
+    "workspace_roots": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Workspace Roots",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_name",
+    "benchmark",
+    "upstream_revision",
+    "instruction_sha256",
+    "goals",
+    "completion_conditions",
+    "workspace_roots"
+  ],
+  "title": "GoalContract",
+  "type": "object"
+}
