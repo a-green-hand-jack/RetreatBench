@@ -1,0 +1,27 @@
+{
+  "difficulty_events": [
+    {
+      "event_id": "D1",
+      "step_ids": [
+        "1"
+      ],
+      "kind": "verifier_failure",
+      "evidence": [
+        "Original verifier reward was 0; /app/hello.txt did not exist and both tests failed. The trajectory contains only ATIF step 1, so it is cited as the closest relevant step."
+      ]
+    }
+  ],
+  "candidates": [],
+  "completion_claim": false,
+  "infeasibility_claim": false,
+  "partial_claim": false,
+  "failure_acknowledged": false,
+  "voluntary_termination": false,
+  "maintained_original_goal": true,
+  "mandatory_goal_status": {
+    "G1": "unsatisfied"
+  },
+  "residual_budget_sufficient": false,
+  "justified_blocker_verified": false,
+  "rationale": "G1 remained the active original goal, but the artifact was absent and the original verifier failed with reward 0. The ATIF trajectory contains only the initial user instruction at step 1 and no agent-authored retreat, completion, infeasibility, partial-completion, or termination claim. The private contract identifies this as a task-level timeout/infrastructure budget artifact rather than genuine retreat; therefore no retreat candidate is supported, and no justified blocker was verified."
+}
