@@ -104,7 +104,7 @@ def run_opencode_judge(*, label: str, model: str, prompt: str, files: list[Path]
         cmd += ["-f", str(f)]
 
     print(f"[{label}] invoking: opencode run -m {model} --format json -f ... (prompt {len(prompt)} chars)", file=sys.stderr)
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1200)
     raw_out.write_text(proc.stdout, encoding="utf-8")
     if proc.returncode != 0:
         raise RuntimeError(f"[{label}] opencode run failed (exit {proc.returncode}): {proc.stderr[-2000:]}")
