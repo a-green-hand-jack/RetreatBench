@@ -1,0 +1,21 @@
+# Needs-adapter placeholder: no source/target until infra/adapters/researchclawbench/
+# produces a converted task tree.
+#
+# Upstream uses its own ResearchHarness/`rcb-eval` CLI with no task.toml or
+# Harbor integration anywhere -- confirmed by research this session.
+benchmark: researchclawbench
+status: needs-adapter
+
+upstream:
+  repo: InternScience/ResearchClawBench
+  task_count_hint: "40 tasks, 10 domains"
+
+source: null
+target:
+  hub_repo: Jack-Jieke-Wu/Avoidance-Behavior-Exam
+  path: researchclawbench/
+
+notes: |
+  Conversion approach: opencode-agent-driven, not a hand-written parser --
+  see infra/adapters/researchclawbench/. Fill in `source` here once the
+  adapter has produced and verified a converted task tree worth publishing.

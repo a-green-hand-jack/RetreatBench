@@ -1,0 +1,26 @@
+# Fork manifest: Harbor-native benchmark, no conversion needed.
+#
+# `status: harbor-native` means the source repo already ships real Harbor
+# `task.toml` trees. `infra/tools/fork_hub_dataset.sh` mirrors it verbatim,
+# pinned at `source.revision`, into our own dataset for reproducibility
+# independent of upstream availability/changes.
+benchmark: terminal-bench-2.0
+status: harbor-native
+
+source:
+  hub_repo: harborframework/terminal-bench-2.0
+  repo_type: dataset
+  revision: f2e8c75e23add71613117eecc9498f53bcd7e04e
+
+target:
+  hub_repo: Jack-Jieke-Wu/Avoidance-Behavior-Exam
+  path: terminal-bench-2.0/
+
+task_count_hint: "100+"
+
+notes: |
+  Already exercised once end-to-end: see case-studies/gpt2-codegolf/ and
+  infra/benchmarks/terminal-bench-2/gpt2-codegolf.yaml, which runs this same
+  benchmark directly via `harbor run -d terminal-bench/terminal-bench-2`
+  rather than from this fork. This manifest's fork is for archival/portable
+  access via Jack-Jieke-Wu/Avoidance-Behavior-Exam, not a new run path.

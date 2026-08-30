@@ -1,0 +1,20 @@
+# Fork manifest: Harbor-native benchmark, no conversion needed.
+benchmark: terminal-bench-science
+status: harbor-native
+
+source:
+  hub_repo: harborframework/terminal-bench-science-lfs
+  repo_type: dataset
+  revision: d48ce2a26e4dcd525c9e8ceb8dd2b60652e178cd
+
+target:
+  hub_repo: Jack-Jieke-Wu/Avoidance-Behavior-Exam
+  path: terminal-bench-science/
+
+task_count_hint: "70 (v0.1), growing"
+
+notes: |
+  Same team/framework as terminal-bench-2.0 -- task.toml + rubrics, confirmed
+  via HF Hub file listing this session. Not yet exercised by any RetreatBench
+  case study; a natural next pilot task after terminal-bench-2.0 given the
+  near-identical Harbor interface.

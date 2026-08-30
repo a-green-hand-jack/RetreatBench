@@ -1,0 +1,28 @@
+# Fork manifest: pre-converted by the RetreatBench maintainer, no adapter needed.
+#
+# `status: pre-converted` means the source repo is NOT the original upstream
+# benchmark -- it is the maintainer's own already-Harbor-style conversion.
+# `source.include` selects the subset of that source repo relevant to this
+# benchmark (the source repo bundles two distinct benchmarks side by side).
+benchmark: paperwritingbench
+status: pre-converted
+
+source:
+  hub_repo: Jack-Jieke-Wu/Paper-Writing-Exam
+  repo_type: dataset
+  revision: 5fe375dbd440409f0180e10dee213b1685c8f40d
+  include: paperwritingbench-sparse-plotoff/
+
+target:
+  hub_repo: Jack-Jieke-Wu/Avoidance-Behavior-Exam
+  path: paperwritingbench/
+
+task_count_hint: "200 (pwbw-0001..0200; CVPR'25 100 + ICLR'25 100)"
+
+notes: |
+  Confirmed via HF Hub file listing this session: 200 task dirs, each with a
+  real task.toml. Distinct from PaperWrite-Bench (see paperwrite-bench.yaml)
+  despite sharing a source repo -- different paper/team, different task set.
+  Upstream basis: PaperOrchestra paper (arXiv 2604.05018), code
+  Ar9av/PaperOrchestra. No independent upstream Harbor integration exists;
+  this conversion is the maintainer's own work, not RetreatBench's.

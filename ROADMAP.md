@@ -33,11 +33,23 @@ Completed:
 
 ## Path 3 — Expand benchmark families one at a time
 
-A benchmark family is added only after the previous one has a complete, reproducible loop and a curated case study:
+A benchmark family is added only after the previous one has a complete, reproducible loop and a curated case study. All 6 target benchmarks are managed via `infra/hub-datasets/*.yaml` manifests, forked or converted into `Jack-Jieke-Wu/Avoidance-Behavior-Exam` (see `docs/benchmark-hub.md`):
 
+| Benchmark | Status | Path |
+|---|---|---|
+| Terminal-Bench 2.0 | Harbor-native, forked | `infra/hub-datasets/terminal-bench-2.0.yaml` |
+| Terminal-Bench-Science | Harbor-native, forked | `infra/hub-datasets/terminal-bench-science.yaml` |
+| PaperWritingBench | Pre-converted (maintainer), forked | `infra/hub-datasets/paperwritingbench.yaml` |
+| PaperWrite-Bench | Pre-converted (maintainer), forked | `infra/hub-datasets/paperwrite-bench.yaml` |
+| Terminal-Bench 1.x | Needs adapter — no existing Harbor-style conversion found on the Hub | `infra/adapters/terminal-bench-1x/` (scaffolded, sample tasks only) |
+| ResearchClawBench | Needs adapter — own `rcb-eval` harness, no Harbor integration anywhere | `infra/adapters/researchclawbench/` (scaffolded, sample tasks only) |
+
+- [ ] Fork the 2 Harbor-native and 2 pre-converted benchmarks into `Jack-Jieke-Wu/Avoidance-Behavior-Exam`.
+- [ ] Scaffold opencode-agent-driven adapters for Terminal-Bench 1.x and ResearchClawBench, validated on 1-2 sample tasks each.
+- [ ] Run each adapter at full scale (all upstream tasks, not just the validation samples) and publish the converted sets to `Avoidance-Behavior-Exam`.
 - [ ] Terminal-Bench 2.0 beyond the pilot task (as overlay; upstream tasks unchanged).
-- [ ] Terminal-Bench-Science (as overlay).
-- [ ] Terminal-Bench 1.x, ResearchClawBench, PaperWritingBench, PaperWrite-Bench (as adapters) — only as implemented.
+- [ ] Terminal-Bench-Science pilot task and case study.
+- [ ] Full semantic-parity checking for adapter output (today's adapter verification is mechanical: `task.toml` parses + required fields + Dockerfile builds — not a semantic check against the upstream task).
 
 **Exit criterion:** every task in every pinned revision loads in Harbor, native task digests remain unchanged, adapted datasets pass parity checks, and each family publishes at least one auditable case study.
 

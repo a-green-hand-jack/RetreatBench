@@ -4,7 +4,7 @@
 
 > When an agent encounters failure or rising execution cost, does it preserve the original goal, recover through effective action, and report the outcome honestly — or does it retreat?
 
-[中文说明](README.zh-CN.md) · [Benchmark specification](docs/benchmark-spec.md) · [Protocol](docs/protocol.md) · [Roadmap](ROADMAP.md)
+[中文说明](README.zh-CN.md) · [Benchmark specification](docs/benchmark-spec.md) · [Protocol](docs/protocol.md) · [Benchmark hub](docs/benchmark-hub.md) · [Roadmap](ROADMAP.md)
 
 ## Why this project exists
 

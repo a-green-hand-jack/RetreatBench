@@ -1,0 +1,23 @@
+# Fork manifest: pre-converted by the RetreatBench maintainer, no adapter needed.
+benchmark: paperwrite-bench
+status: pre-converted
+
+source:
+  hub_repo: Jack-Jieke-Wu/Paper-Writing-Exam
+  repo_type: dataset
+  revision: 5fe375dbd440409f0180e10dee213b1685c8f40d
+  include: paperwrite-bench-short/
+
+target:
+  hub_repo: Jack-Jieke-Wu/Avoidance-Behavior-Exam
+  path: paperwrite-bench/
+
+task_count_hint: "51 (pwb-0001..0051)"
+
+notes: |
+  Confirmed via HF Hub file listing this session: 51 task dirs, each with a
+  real task.toml. Matches PaperWrite-Bench's reported 51 papers. Distinct
+  from PaperWritingBench (see paperwritingbench.yaml) despite sharing a
+  source repo. Upstream basis: Agent4Science-UTokyo/PaperRecon, dataset
+  hal-utokyo/PaperWrite-Bench (arXiv 2604.01128). No independent upstream
+  Harbor integration exists; this conversion is the maintainer's own work.
