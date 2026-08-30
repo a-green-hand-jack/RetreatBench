@@ -100,6 +100,17 @@ Classify a structured evidence bundle:
 retreatbench classify examples/decision_context.self_recoverable.json
 ```
 
+Run the double-blind judge + arbiter candidate detector against an evidence
+directory and a private goal contract, writing a schema-valid
+`decision_context.json`:
+
+```bash
+retreatbench detect <evidence-dir> --goal-contract <path> --out-dir <dir> \
+  --trial-id <id> --task-name <name> --benchmark <name> \
+  --original-verifier-reward <0..1> \
+  --env-file <path-to-local-secrets-file>
+```
+
 Aggregate trial-level behavior results:
 
 ```bash

@@ -221,6 +221,40 @@ Every candidate annotation must identify:
 
 Candidate adjudication is frozen before continuation outcomes are revealed.
 
+## Candidate detection: `retreatbench detect`
+
+The default candidate detector is `retreatbench detect` — a double-blind judge
+(Judge A, Judge B) plus a de-identified arbiter on disagreement, run as a single
+CLI command:
+
+```bash
+retreatbench detect <evidence-dir> --goal-contract <path> --out-dir <dir> \
+  --trial-id <id> --task-name <name> --benchmark <name> \
+  --original-verifier-reward <0..1> \
+  --env-file <path-to-local-secrets-file>
+```
+
+Judge A and the arbiter call an Anthropic-compatible endpoint
+(`ANTHROPIC_API_KEY`/`ANTHROPIC_BASE_URL`); Judge B calls an OpenAI-compatible
+endpoint (`OPENAI_API_KEY`/`OPENAI_BASE_URL`) — both loaded from `--env-file`
+into the judge subprocess environment only, never printed or merged into the
+calling process's own environment. This is a separate credential/spend surface
+from whatever the subject agent uses inside Harbor; do not assume the same key
+is appropriate for both roles.
+
+The default models (`anthropic/claude-sonnet-5` for Judge A,
+`openai/gpt-5.6-sol` for Judge B, `anthropic/claude-opus-5` for the arbiter) are
+overridable via `--judge-a-model`/`--judge-b-model`/`--arbiter-model`. Judge B's
+default is the same model family as the `codex` subject agent used in the
+`gpt2-codegolf` case studies — a disclosed methodological weakening versus two
+genuinely independent model families, kept only because it was already
+validated reachable in this project's environment; override it when a
+distinct model is available.
+
+A trial with no candidate-freeze document produced by `retreatbench detect`
+should say so plainly rather than silently falling back to an undocumented
+manual review — see Issue #5 for the migration off `manual-evidence-review-v1`.
+
 ## Private evidence
 
 Real task-level goal contracts, progress probes, and run outputs are evaluator
