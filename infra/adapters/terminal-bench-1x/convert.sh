@@ -31,5 +31,5 @@ for task_id in "${TASK_IDS[@]}"; do
   mkdir -p "$out_dir"
   prompt="$(sed "s#{upstream_task_dir}#${upstream_dir}#; s#{output_dir}#${out_dir}#" "${SCRIPT_DIR}/prompt.template.txt")"
   echo "=== converting ${task_id} ==="
-  opencode run --agent retreatbench-tb1x-adapter -m "$MODEL" --format json "$prompt"
+  opencode run --agent stevedore-tb1x -m "$MODEL" --format json "$prompt"
 done

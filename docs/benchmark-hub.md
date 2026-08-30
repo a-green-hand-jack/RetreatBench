@@ -49,9 +49,14 @@ explicitly documented as imperfect: "some tasks may require manual
 migration") and ResearchClawBench's total absence of Harbor integration both
 argue against a hand-written, deterministic Python parser -- upstream task
 formats here are heterogeneous enough that a rigid converter would need
-constant per-task exceptions. Instead, `infra/adapters/<slug>/` holds:
+constant per-task exceptions. Instead, `infra/adapters/<slug>/` holds a member
+of **Stevedore** -- the opencode agent family that loads upstream benchmark
+tasks into Harbor, the way a stevedore loads cargo onto a ship
+(`stevedore-tb1x`, `stevedore-rcb`, one per benchmark since each has a
+genuinely different source format and prompt, discoverable to opencode under
+`.opencode/agent/stevedore-<slug>.md`):
 
-- `agent.md` -- an opencode custom agent whose system prompt carries Harbor's
+- `agent.md` -- Stevedore's system prompt, carrying Harbor's
   `task.toml` schema/fields, worked examples from
   `infra/benchmarks/terminal-bench-2/gpt2-codegolf.yaml` and
   `case-studies/gpt2-codegolf/`, and the upstream benchmark's raw task
@@ -59,11 +64,23 @@ constant per-task exceptions. Instead, `infra/adapters/<slug>/` holds:
   instruction/environment/verifier semantics rather than paraphrase them
   (Design invariant #1 in `README.md`).
 - `prompt.template.txt` -- the per-task invocation template.
-- A thin bash orchestration loop that calls the agent once per upstream task.
-- A small, deliberately mechanical verification script: does the produced
-  `task.toml` parse and carry the required fields, does the environment's
-  Dockerfile build. This is **not** semantic parity checking against the
-  upstream task -- that remains an open item (see `ROADMAP.md` Path 3).
+- A thin bash orchestration loop that calls Stevedore once per upstream task,
+  then always runs the mandatory verification below (not an optional
+  separate step a human might forget).
+- `infra/adapters/verify_task.py` -- mechanical verification: does the
+  produced `task.toml` parse and carry the required fields, does the
+  environment build (Harbor builds directly from `environment/Dockerfile`
+  when `[environment].docker_image` is left unset -- see
+  `harbor.environments.definition.should_use_prebuilt_docker_image`;
+  `docker_image` is an opt-in override for a pre-published image, never a
+  required placeholder), and -- for benchmarks with private ground truth
+  like ResearchClawBench -- a hard-fail check (`--private-source`) that no
+  private file's content or filename leaked into any agent-visible path.
+  This is **not** semantic parity checking against the upstream task, and
+  not a real capability signal -- both remain open items (see `ROADMAP.md`
+  Path 3). A real `harbor run --path <converted-task-dir>` smoke test with a
+  cheap subject agent and a short timeout is the second, independent
+  validation layer before any converted task is published to the HF dataset.
 
 Adapter work is validated on 1-2 sample tasks before any full-scale run, the
 same pilot-first discipline used for the single `gpt2-codegolf` task before
