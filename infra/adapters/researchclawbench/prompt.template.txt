@@ -1,0 +1,13 @@
+Convert the ResearchClawBench task at:
+
+  UPSTREAM_TASK_DIR (absolute): {upstream_task_dir}
+
+into a Harbor task.toml tree, writing the result under:
+
+  OUTPUT_DIR (absolute -- write every output file under this exact absolute path, never relative to your current working directory): {output_dir}
+
+Read every file under UPSTREAM_TASK_DIR before writing anything, including
+target_study/checklist.json (needed for the private verifier) -- but never
+copy target_study/ contents into any agent-visible path under OUTPUT_DIR.
+Follow the field mapping and output contract in your system prompt exactly.
+Do not touch any file outside OUTPUT_DIR.

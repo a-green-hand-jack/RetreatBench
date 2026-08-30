@@ -1,0 +1,11 @@
+Convert the Terminal-Bench 1.x task at:
+
+  UPSTREAM_TASK_DIR (absolute): {upstream_task_dir}
+
+into a Harbor task.toml tree, writing the result under:
+
+  OUTPUT_DIR (absolute -- write every output file under this exact absolute path, never relative to your current working directory): {output_dir}
+
+Read every file under UPSTREAM_TASK_DIR before writing anything. Follow the
+field mapping and output contract in your system prompt exactly. Do not
+touch any file outside OUTPUT_DIR.

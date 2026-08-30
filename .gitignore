@@ -38,3 +38,6 @@ upstreams/
 **/tests/private/
 **/private_ground_truth/
 **/judge_credentials*
+
+# Local opencode agent discovery (project-scoped copies of infra/adapters/*/agent.md)
+.opencode/
