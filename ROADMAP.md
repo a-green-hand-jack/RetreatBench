@@ -1,61 +1,47 @@
-# RetreatBench implementation roadmap
+# RetreatBench roadmap
 
-The project does not reduce the scientific target to a smaller substitute benchmark. Engineering slices exist only to validate adapters and infrastructure; official natural runs cover every eligible task in each pinned upstream revision.
+The project does not reduce the scientific target to a smaller substitute benchmark. Engineering slices exist only to validate the infrastructure; official natural runs cover every eligible task in each pinned upstream revision. No benchmark scores are claimed until then.
 
-## Phase A — Frozen interfaces and core schemas
+## Current state
 
-- [x] Select the project name and repository structure.
-- [x] Define goal contract, decision context, continuation evidence, behavior result, and aggregate metrics.
-- [x] Add executable validation, classification, aggregation, examples, and CI.
-- [ ] Pin an exact Harbor release and ATIF schema revision.
-- [ ] Freeze all six upstream revisions in `configs/upstreams.lock.json`.
+Completed:
 
-**Exit criterion:** all schemas validate; exported schemas are deterministic; core tests pass.
+- Core behavioral evaluator (`models`, `decision`, `metrics`, `state`, `io`, `cli`) with schemas, examples, and CI.
+- One complete task-level loop: Terminal-Bench 2.0 `gpt2-codegolf`, Harbor `codex` / `openai/gpt-5.6-sol`, natural trial + R3 workspace-only continuation, classified `observed_retreat` / `D-observed-retreat`. Curated in `case-studies/gpt2-codegolf/`.
 
-## Phase B — Full benchmark integration
+## Path 1 — Reproduce and harden the Terminal-Bench loop
 
-- [ ] Terminal-Bench 1.x adapter and upstream parity audit.
-- [ ] Terminal-Bench 2.0 non-invasive overlay.
-- [ ] Terminal-Bench-Science non-invasive overlay.
-- [ ] ResearchClawBench adapter.
-- [ ] PaperWritingBench sparse/PlotOff adapter.
-- [ ] PaperWrite-Bench short-overview adapter.
-- [ ] Deterministic task IDs, source manifests, license records, and contract indexes.
+- [x] One validated natural run on `gpt2-codegolf` (OpenAI OAuth, no Apex).
+- [x] Parent state capture, manifest, and tree hash.
+- [x] Candidate freeze before continuation.
+- [x] R3 workspace-only continuation with the goal-preservation nudge.
+- [x] Parent/branch probe comparison and original verifier rerun.
+- [ ] Pin an exact Harbor release and ATIF schema revision in the repository.
+- [ ] Record strict residual wall-clock, token, and monetary budgets for the continuation.
+- [ ] Add a reproducible `harbor run` script for the task in `infra/benchmarks/`.
+- [ ] Make the task's evidence package complete and CI-checkable.
 
-**Exit criterion:** every task in every pinned revision loads in Harbor; native task digests remain unchanged; adapted datasets pass parity checks.
+**Exit criterion:** every step of the `gpt2-codegolf` loop is reproducible from the repository and pinned inputs.
 
-## Phase C — Oracle, NOP, health, and state restoration
+## Path 2 — Native R1 continuation
 
-- [ ] Original verifier oracle pass and flake audit.
-- [ ] NOP pass rate of zero.
-- [ ] Environment and blocker probes.
-- [ ] Host-generated state bundles, manifests, and restore hooks.
-- [ ] Hash-equality validation for all tracked workspace roots and sidecar state.
-- [ ] Private leakage and adversarial artifact tests.
+- [ ] Determine whether the pinned Harbor release supports cross-trial native trajectory resume for `codex`.
+- [ ] If supported, run an R1-native continuation from a hash-matched state under strict residual budget.
+- [ ] If not supported (current Harbor 0.20.0 behavior), keep the result at `R3-workspace-only` and do not claim R1.
 
-**Exit criterion:** state restoration is exact for every supported task class and no private evidence enters the agent environment.
+**Exit criterion:** a defensible, evidence-backed resume tier for the agent scaffold, not a configuration default.
 
-## Phase D — Full natural runs
+## Path 3 — Expand benchmark families one at a time
 
-- [ ] Register the agent/model/scaffold matrix.
-- [ ] Run all tasks with pre-registered budgets and seeds.
-- [ ] Collect ATIF, final answers, rewards, progress probes, budgets, and state bundles.
-- [ ] Freeze the candidate detector before any continuation outcomes are visible.
+A benchmark family is added only after the previous one has a complete, reproducible loop and a curated case study:
 
-**Exit criterion:** every valid natural trial has a complete evidence package or an explicit invalid reason.
+- [ ] Terminal-Bench 2.0 beyond the pilot task (as overlay; upstream tasks unchanged).
+- [ ] Terminal-Bench-Science (as overlay).
+- [ ] Terminal-Bench 1.x, ResearchClawBench, PaperWritingBench, PaperWrite-Bench (as adapters) — only as implemented.
 
-## Phase E — Same-state continuations
+**Exit criterion:** every task in every pinned revision loads in Harbor, native task digests remain unchanged, adapted datasets pass parity checks, and each family publishes at least one auditable case study.
 
-- [ ] Neutral Continue branch.
-- [ ] Goal-Preservation Nudge branch.
-- [ ] Diagnostic Nudge ablation.
-- [ ] Native resume support matrix by agent scaffold.
-- [ ] Strict residual-budget accounting.
-- [ ] Random non-candidate continuations for detector-recall estimation.
-
-**Exit criterion:** every eligible candidate has a valid branch result or a documented infrastructure exclusion.
-
-## Phase F — Evaluation and paper analysis
+## Evaluation and paper analysis (later)
 
 - [ ] Dual semantic judges with frozen prompts and blinded identities.
 - [ ] Human adjudication protocol and annotation set.

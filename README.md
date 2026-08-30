@@ -2,15 +2,15 @@
 
 **A Harbor-native benchmark for recoverable goal retreat, recovery quality, and reporting honesty in autonomous agents.**
 
-> When an agent encounters failure or rising execution cost, does it preserve the original goal, recover through effective action, and report the outcome honestly—or does it retreat?
+> When an agent encounters failure or rising execution cost, does it preserve the original goal, recover through effective action, and report the outcome honestly — or does it retreat?
 
-[中文说明](README.zh-CN.md) · [Benchmark specification](docs/benchmark-spec.md) · [Architecture](docs/architecture.md) · [Roadmap](ROADMAP.md)
+[中文说明](README.zh-CN.md) · [Benchmark specification](docs/benchmark-spec.md) · [Protocol](docs/protocol.md) · [Roadmap](ROADMAP.md)
 
 ## Why this project exists
 
 Most agent benchmarks answer **whether a task was completed**. RetreatBench adds a trajectory-level behavioral layer that asks **how an agent behaves after the task becomes difficult**.
 
-The paper-facing story may describe an agent's **“avoidant personality.”** The technical construct is narrower and falsifiable:
+The paper-facing story may describe an agent's "avoidant personality." The technical construct is narrower and falsifiable:
 
 > **Recoverable Goal Retreat (RGR):** after an objective difficulty event, an agent narrows, substitutes, defers, transfers, or falsely completes a required goal even though a goal-preserving recovery path remains feasible within the residual budget and no justified stopping condition applies.
 
@@ -26,7 +26,7 @@ where $D_t$ is an objective difficulty event, $R_t$ is observable goal retreat, 
 
 ## Core protocol
 
-RetreatBench is a **behavioral overlay**, not a replacement task set:
+RetreatBench is a **behavioral overlay**, not a replacement task set. The full procedure is in [`docs/protocol.md`](docs/protocol.md):
 
 1. Run every eligible task in a pinned upstream benchmark revision under its original instruction, environment, budget, and verifier.
 2. Capture the ATIF trajectory, final answer, original reward, residual budget, progress probes, and a restorable workspace state bundle.
@@ -48,19 +48,6 @@ flowchart LR
 
 The strongest positive label is **self-recoverable avoidance**: the same agent and model, resumed from a hash-matched state with strict residual budget, succeeds or makes significant objective progress after only the goal-preservation nudge.
 
-## Benchmark coverage
-
-RetreatBench targets complete pinned revisions of the following benchmark families. Small subsets are permitted only as adapter, parity, CI, and failure-localization fixtures; they are not the official evaluation set.
-
-| Benchmark | Integration mode | Primary evidence |
-|---|---|---|
-| Terminal-Bench 1.x | Harbor adapter + parity audit | tests, artifacts, terminal trajectory |
-| Terminal-Bench 2.0 | Harbor overlay; upstream tasks unchanged | original verifier, ATIF, state bundle |
-| Terminal-Bench-Science | Harbor overlay; upstream tasks unchanged | scientific artifacts, subtests, rubric |
-| ResearchClawBench | Harbor adapter | analyses, experiments, report, expert checklist |
-| PaperWritingBench | Harbor adapter | LaTeX/PDF, review, citation, literature quality |
-| PaperWrite-Bench | Harbor adapter | rubric, hallucination, citation, figures/tables |
-
 ## Measured dimensions
 
 RetreatBench reports capability and behavior separately:
@@ -74,16 +61,14 @@ Core outputs include candidate retreat rate, self-recoverable avoidance rate, go
 
 ## Repository status
 
-This repository is the implementation bootstrap for the full cross-benchmark evaluation. It currently provides:
+This repository is the evaluation infrastructure for RetreatBench. It currently provides:
 
-- versioned Pydantic models and exported JSON Schemas;
-- deterministic trial classification for counterfactual evidence tiers;
-- dataset-level metric aggregation;
-- example goal contracts, behavior results, prompts, and Harbor job configs;
-- adapter and overlay interfaces for all six benchmark families;
-- CI tests for schemas, decision logic, and metric denominators.
+- a benchmark-agnostic behavioral evaluator: `models`, deterministic classification, metrics, state snapshot/restore, and a CLI (`src/retreatbench/`);
+- exported JSON Schemas and synthetic fixtures (`schemas/`, `examples/`);
+- Harbor-facing prompts and a single validated task configuration (`infra/`);
+- one complete, auditable task-level loop (`case-studies/gpt2-codegolf/`).
 
-Upstream task conversion, full Harbor runs, candidate detection models, and native session-resume integrations are tracked in [ROADMAP.md](ROADMAP.md). No benchmark scores are claimed yet.
+**No benchmark scores are claimed yet.** One task is an engineering pilot, not an evaluation set. Upstream task assets and Harbor run outputs are not stored in this repository; they are recreated or downloaded by pinned instructions.
 
 ## Installation
 
@@ -122,27 +107,36 @@ retreatbench aggregate examples/behavior_results.example.jsonl \
   --output /tmp/retreatbench_metrics.json
 ```
 
+Capture and verify a workspace state snapshot:
+
+```bash
+retreatbench snapshot-state <root> <output-dir>
+retreatbench verify-state <root> <manifest>
+retreatbench restore-state <snapshot-dir> <destination>
+```
+
 Run the repository checks:
 
 ```bash
 pytest
 python scripts/export_schemas.py --check
+python scripts/validate_examples.py
 ```
 
 ## Repository layout
 
 ```text
 RetreatBench/
-├── adapters/                 # Non-native benchmark converters
-├── overlays/                 # Non-invasive configs for native Harbor datasets
-├── configs/                  # Pinned upstreams and run configurations
-├── contracts/                # Private goal contracts; public examples only in git
-├── docs/                     # Architecture, specification, and implementation decisions
-├── prompts/                  # Frozen candidate-judge and continuation prompts
-├── schemas/                  # Exported machine-readable schemas
-├── src/retreatbench/         # Core models, classifier, metrics, and CLI
-└── tests/                    # Unit, schema, fixture, and future parity tests
+├── src/retreatbench/      # Core models, classifier, metrics, state, CLI
+├── infra/                 # Harbor-facing prompts, task configs, tools
+├── docs/                  # Specification, protocol, decisions
+├── schemas/               # Exported machine-readable schemas
+├── examples/              # Synthetic schema and decision-logic fixtures
+├── case-studies/          # Curated, auditable completed loops
+└── tests/                 # Unit, schema, fixture, and state tests
 ```
+
+Upstream task assets and Harbor run outputs live outside the repository. Goal contracts, progress probes, and run evidence are evaluator-private and never enter the agent environment or this repository.
 
 ## Design invariants
 
@@ -160,4 +154,4 @@ A paper citation will be added when the benchmark manuscript is public. Until th
 
 ## Licensing
 
-RetreatBench code is licensed under Apache-2.0. Upstream benchmark tasks, papers, datasets, containers, and artifacts retain their original licenses. When redistribution rights are uncertain, this repository publishes adapters, lockfiles, and download/conversion scripts rather than vendoring upstream assets. See [NOTICE.md](NOTICE.md).
+RetreatBench code is licensed under Apache-2.0. Upstream benchmark tasks, papers, datasets, containers, and artifacts retain their original licenses. When redistribution rights are uncertain, this repository publishes lockfiles and instructions rather than vendoring upstream assets. See [NOTICE.md](NOTICE.md).

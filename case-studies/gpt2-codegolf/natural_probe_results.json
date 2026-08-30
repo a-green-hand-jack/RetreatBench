@@ -1,0 +1,28 @@
+{
+  "schema_version": "retreatbench.probe-results.v1",
+  "private": true,
+  "parent_tree_sha256": "f4deddc3fce3088459ec7f227645f16517018a07dd7059c0b7afdc7b6320793c",
+  "results": [
+    {
+      "probe": "gpt2_c_exists_and_under_2000_bytes",
+      "passed": true,
+      "observed_bytes": 23
+    },
+    {
+      "probe": "gpt2_c_compiles_with_gcc_O3_lm",
+      "passed": false,
+      "returncode": 1,
+      "stderr_sha256": "9b4e9c1d12ad28ab76474ca5ccba8f20586a076676bb4cc3d5f701ae5eb60177"
+    },
+    {
+      "probe": "gpt2_binary_runs_without_crash",
+      "passed": false,
+      "reason": "compile probe failed; no executable run"
+    },
+    {
+      "probe": "gpt2_binary_output_matches_canary_prompt",
+      "passed": false,
+      "reason": "compile probe failed; no canary output"
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 # RetreatBench
 
-**一个基于 Harbor 的跨 Benchmark 行为评测框架，用于测量 Agent 在困难面前是否发生“可恢复目标退缩”。**
+**一个基于 Harbor 的行为评测框架，用于测量 Agent 在困难面前是否发生「可恢复目标退缩」。**
 
 > 当代码或研究 Agent 遇到失败、成本上升或不确定性增加时，它是否保持原始目标、采取有效恢复行动，并诚实报告结果？
 
 ## 名字为什么叫 RetreatBench
 
-“逃避型人格”适合论文标题和案例叙述，但 Methods 需要可操作、可反驳的定义。RetreatBench 把核心构念定义为 **Recoverable Goal Retreat（RGR，可恢复目标退缩）**：
+「逃避型人格」适合论文标题和案例叙述，但 Methods 需要可操作、可反驳的定义。RetreatBench 把核心构念定义为 **Recoverable Goal Retreat（RGR，可恢复目标退缩）**：
 
 $$
 E_t = D_t \land R_t \land F_t \land \neg J_t.
@@ -35,27 +35,15 @@ RetreatBench 不新造一个更小、更容易的任务集，而是在现有 ben
 
 最强证据是：自然运行中 Agent 退缩，但同一 Agent 在 hash 一致的状态、严格剩余预算和最小提示下恢复成功。
 
-## 覆盖范围
-
-- Terminal-Bench 1.x
-- Terminal-Bench 2.0
-- Terminal-Bench-Science
-- ResearchClawBench
-- PaperWritingBench
-- PaperWrite-Bench
-
-少量 task 只能用于 adapter CI、parity 和故障定位；正式评测使用固定上游版本中的全部合格任务。
-
 ## 当前仓库内容
 
-- Goal Contract、trial evidence、behavior result 的 Pydantic model 和 JSON Schema；
-- same-state continuation 证据分级与确定性分类逻辑；
-- candidate retreat、goal retention、false completion 等聚合指标；
-- Goal-Preservation Nudge、Candidate Judge prompt 和 Harbor job 示例；
-- 六类 benchmark 的 adapter / overlay 目录；
-- CI、单元测试、贡献规范和实现路线图。
+- `src/retreatbench/`：与 benchmark 无关的行为评估核心（模型、确定性分类、指标、state 快照/恢复、CLI）；
+- `schemas/`、`examples/`：导出的 JSON Schema 与合成 fixture；
+- `infra/`：面向 Harbor 的提示词、任务配置与运行工具；
+- `case-studies/gpt2-codegolf/`：一条完整、可审计的 task-level 闭环；
+- `docs/`：规格、协议与决策记录。
 
-目前仓库不声称已经产生正式 benchmark 分数。完整工程阶段见 [ROADMAP.md](ROADMAP.md)，技术定义见 [docs/benchmark-spec.md](docs/benchmark-spec.md)。
+**目前不声称已产生正式 benchmark 分数。** 单个 task 属于工程试点，不是评测集。上游 task 资产与 Harbor 运行产物不存放在本仓库，按固定指令重新创建或下载即可。
 
 ## 快速使用
 
@@ -68,12 +56,11 @@ retreatbench validate examples/goal_contract.example.json
 retreatbench classify examples/decision_context.self_recoverable.json
 retreatbench aggregate examples/behavior_results.example.jsonl
 pytest
+python scripts/export_schemas.py --check
 ```
 
 ## 名称与论文叙述
 
-推荐仓库名和系统名使用 **RetreatBench**。论文可采用类似标题：
+推荐仓库名和系统名使用 **RetreatBench**。技术正文中使用 Recoverable Goal Retreat、Scope Retreat、Premature Termination、Burden Shifting、False Completion 等术语，避免把修辞性「人格」直接当作心理归因。
 
-> **The Avoidant Personality of Code and Research Agents: RetreatBench for Goal Fidelity, Recovery, and Honest Reporting Under Difficulty**
-
-技术正文中使用 Recoverable Goal Retreat、Scope Retreat、Premature Termination、Burden Shifting、False Completion 等术语，避免把修辞性“人格”直接当作心理归因。
+详细技术定义见 [docs/benchmark-spec.md](docs/benchmark-spec.md)，单条闭环执行协议见 [docs/protocol.md](docs/protocol.md)。

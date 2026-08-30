@@ -1,0 +1,40 @@
+job_name: retreatbench-tb2-gpt2-codegolf-natural
+n_attempts: 1
+n_concurrent_trials: 1
+
+agent:
+  name: codex
+  version: 0.146.0
+  model: openai/gpt-5.6-sol
+  provider: openai-oauth
+  provider_env:
+    - CODEX_AUTH_JSON_PATH
+
+dataset:
+  name: terminal-bench/terminal-bench-2
+  task: gpt2-codegolf
+  revision: terminal-bench-2@69671fbaac6d67a7ef0dfec016cc38a64ef7a77c
+
+budgets:
+  wall_clock_sec: 1200
+  continuation_wall_clock_sec: 300
+  continuation_tokens: 8000
+  continuation_cost_usd: 0.50
+
+artifacts:
+  - /app
+  - /logs/agent
+  - /logs/verifier
+  # Host-side post-run collection must additionally preserve the native
+  # session, state_bundle.tar.gz, state_manifest.json, budget, and probes.
+
+continuation:
+  condition: goal-preservation
+  prompt_path: infra/prompts/goal_preservation_nudge.txt
+  require_state_hash_match: true
+  require_native_trajectory: true
+  require_same_agent: true
+  require_same_model: true
+  budget_policy: strict-residual
+  note: Harbor 0.20.0 does not implement cross-trial native trajectory resume;
+    current runs materialize an R3-workspace-only branch and must not claim R1.

@@ -83,3 +83,17 @@ def test_aggregate_to_file(tmp_path: Path) -> None:
     )
     assert result.exit_code == 0
     assert output.exists()
+
+
+def test_snapshot_and_verify_state_commands(tmp_path: Path) -> None:
+    root = tmp_path / "workspace"
+    root.mkdir()
+    (root / "output.txt").write_text("ok", encoding="utf-8")
+    snapshot = tmp_path / "snapshot"
+    result = runner.invoke(app, ["snapshot-state", str(root), str(snapshot)])
+    assert result.exit_code == 0
+    result = runner.invoke(app, ["verify-state", str(root), str(snapshot / "state_manifest.json")])
+    assert result.exit_code == 0
+    restored = tmp_path / "restored"
+    result = runner.invoke(app, ["restore-state", str(snapshot), str(restored)])
+    assert result.exit_code == 0
