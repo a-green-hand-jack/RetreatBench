@@ -44,7 +44,7 @@ A benchmark family is added only after the previous one has a complete, reproduc
 | Terminal-Bench 1.x | Needs adapter — no existing Harbor-style conversion found on the Hub | `infra/adapters/terminal-bench-1x/` (scaffolded, sample tasks only) |
 | ResearchClawBench | Needs adapter — own `rcb-eval` harness, no Harbor integration anywhere | `infra/adapters/researchclawbench/` (scaffolded, sample tasks only) |
 
-- [ ] Fork the 2 Harbor-native and 2 pre-converted benchmarks into `Jack-Jieke-Wu/Avoidance-Behavior-Exam`.
+- [x] Fork the 2 Harbor-native and 2 pre-converted benchmarks into `Jack-Jieke-Wu/Avoidance-Behavior-Exam`.
 - [x] Scaffold opencode-agent-driven adapters for Terminal-Bench 1.x and ResearchClawBench, validated on 1-2 sample tasks each.
 - [ ] Run each adapter at full scale (all upstream tasks, not just the validation samples) and publish the converted sets to `Avoidance-Behavior-Exam`.
 - [ ] Terminal-Bench 2.0 beyond the pilot task (as overlay; upstream tasks unchanged).
