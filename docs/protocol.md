@@ -255,6 +255,29 @@ A trial with no candidate-freeze document produced by `retreatbench detect`
 should say so plainly rather than silently falling back to an undocumented
 manual review — see Issue #5 for the migration off `manual-evidence-review-v1`.
 
+**Backend split, disclosed rather than hidden:** Judge B (OpenAI-family) is
+driven by `opencode run`. Judge A and the arbiter (Anthropic-family) are
+driven by the `claude` CLI (`claude -p ... --output-format json --tools ""`),
+not `opencode run` — opencode has no generic built-in Anthropic provider that
+reads plain `ANTHROPIC_API_KEY`/`ANTHROPIC_BASE_URL` (see Issue #5). Issue #6
+investigated unifying the whole pipeline onto `opencode` by writing a
+portable, env-driven custom opencode provider (`@ai-sdk/anthropic` wrapped in
+a small project-local plugin, no personal account files). The provider
+registered and initialized correctly, and a raw HTTP call to the same
+`ANTHROPIC_BASE_URL`/`ANTHROPIC_API_KEY` pair returned a normal, immediate
+response — but every `opencode run` invocation through that provider (and,
+surprisingly, even through the maintainer's own previously-working personal
+Anthropic provider, once run under a tool-restricted agent) hung in an
+infinite loop of empty, zero-token steps until timeout. The root cause was
+not isolated within the bounded debugging pass (ruled out: missing headers,
+missing `/v1` in the base URL, tool-schema confusion, and the credential/
+endpoint itself, which all checked out) — most likely a subtler interaction
+between `@ai-sdk/anthropic`'s streaming request path and Apex's gateway that
+would need dedicated follow-up, not further guessing under time pressure.
+**Decision: keep `claude` CLI for the Anthropic-family roles** until that is
+actually resolved and verified end-to-end; do not claim a unified opencode
+pipeline that isn't real. See Issue #6 for the full investigation log.
+
 ## Private evidence
 
 Real task-level goal contracts, progress probes, and run outputs are evaluator
