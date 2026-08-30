@@ -8,6 +8,7 @@ htmlcov/
 dist/
 build/
 .venv/
+uv.lock
 
 # Editors / OS
 .vscode/
