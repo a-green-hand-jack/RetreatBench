@@ -36,5 +36,11 @@ continuation:
   require_same_agent: true
   require_same_model: true
   budget_policy: strict-residual
-  note: Harbor 0.20.0 does not implement cross-trial native trajectory resume;
-    current runs materialize an R3-workspace-only branch and must not claim R1.
+  note: Harbor 0.20.0 does not implement cross-trial native trajectory resume
+    (agent.load_trajectory); this recipe materializes an R3-workspace-only
+    branch and must not claim R1. For a genuine R1-native alternative, see
+    Issue #4 and case-studies/gpt2-codegolf/README.md's "R1-native run"
+    section: a local 2-step copy of this task ([[steps]] natural +
+    continuation in task.toml) run with `--resume-trajectory` gets real
+    native codex session resume within one harbor run invocation, without
+    waiting on load_trajectory.
