@@ -117,20 +117,28 @@ async def mechanical_verify(
     cmd = ["python3", str(repo_root / "infra" / "adapters" / "verify_task.py"), str(out_dir)]
     if private_source is not None:
         cmd += ["--private-source", str(private_source)]
-    code, output = await run_cmd(cmd, timeout=600)
+    code, output = await run_cmd(cmd, timeout=900)
     return code == 0, output[-1500:]
 
 
 def find_reward_file(job_dir: Path, task_id: str) -> Path | None:
+    # Harbor truncates long task ids when naming the trial directory (e.g.
+    # "decommissioning-service-with-sensitive-data__yaiLMXt" becomes
+    # "decommissioning-service-with-sen__yaiLMXt") -- glob on "*__*" instead
+    # of assuming the full task_id is the directory prefix verbatim. Each
+    # job_dir here holds exactly one trial (n-attempts=1, one task per job),
+    # so taking the sole matching trial directory is unambiguous. (Found
+    # empirically: a real trial with reward=1.0 was being logged as FAIL
+    # because this glob never matched the truncated directory name.)
     for pattern in ("reward.txt", "reward.json"):
-        matches = glob.glob(str(job_dir / f"{task_id}__*" / "verifier" / pattern))
+        matches = glob.glob(str(job_dir / "*__*" / "verifier" / pattern))
         if matches:
             return Path(matches[0])
     return None
 
 
 def find_exception_file(job_dir: Path, task_id: str) -> Path | None:
-    matches = glob.glob(str(job_dir / f"{task_id}__*" / "exception.txt"))
+    matches = glob.glob(str(job_dir / "*__*" / "exception.txt"))
     return Path(matches[0]) if matches else None
 
 
