@@ -61,8 +61,9 @@ CONVERT_MODEL = "openai/gpt-5.6-sol"
 HARBOR_MODEL = "openai/gpt-5.6-sol"
 CODEX_MODEL = "openai/gpt-5.6-sol"
 AGENT_TIMEOUT_MULTIPLIER = "0.5"
-CONVERT_TIMEOUT_SEC = 420
-HARBOR_TIMEOUT_SEC = 900
+VERIFIER_TIMEOUT_MULTIPLIER = "3.0"  # some verifiers (e.g. build-initramfs-qemu) need more than the upstream's 180s default
+CONVERT_TIMEOUT_SEC = 900  # bumped: some tasks have large auxiliary data files
+HARBOR_TIMEOUT_SEC = 2100  # bumped for a heavy-task retry pass (kernel/QEMU builds etc.)
 CODEX_AUTH_JSON_PATH = str(Path.home() / ".codex" / "auth.json")
 CREDENTIAL_ERROR_PATTERNS = re.compile(
     r"insufficient account balance|insufficient_quota|invalid_api_key|"
@@ -117,7 +118,7 @@ async def mechanical_verify(
     cmd = ["python3", str(repo_root / "infra" / "adapters" / "verify_task.py"), str(out_dir)]
     if private_source is not None:
         cmd += ["--private-source", str(private_source)]
-    code, output = await run_cmd(cmd, timeout=900)
+    code, output = await run_cmd(cmd, timeout=1800)  # bumped for a heavy-task retry pass
     return code == 0, output[-1500:]
 
 
@@ -156,6 +157,8 @@ async def harbor_run_once(
         "1",
         "--agent-timeout-multiplier",
         AGENT_TIMEOUT_MULTIPLIER,
+        "--verifier-timeout-multiplier",
+        VERIFIER_TIMEOUT_MULTIPLIER,
         "--job-name",
         job_name,
         "--yes",

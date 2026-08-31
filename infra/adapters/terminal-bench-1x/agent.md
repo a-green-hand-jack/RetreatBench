@@ -13,6 +13,8 @@ permission:
     "mkdir -p *": allow
     "cp *": allow
     "cp -r *": allow
+    "du *": allow
+    "wc *": allow
 ---
 
 # Role
@@ -140,6 +142,25 @@ storage = "10G"
   `memory`, `storage` at the same conservative defaults as the gpt2-codegolf
   example unless the upstream Dockerfile clearly needs more (e.g. GPU
   workloads, large datasets).
+- **Dockerfile `COPY` instructions that reference `tests/<subpath>`** (a
+  real, recurring Terminal-Bench 1.x pattern -- roughly 1 in 20 upstream
+  tasks does this, not a one-off): the upstream Dockerfile assumes a build
+  context of the whole task root, so `COPY tests/src/ /app/src/` works
+  there; Harbor's build context is `environment/` only, so that exact line
+  breaks (`/tests/src: not found`). Check what the referenced file is
+  actually used for before blindly copying it -- in the confirmed case
+  (`fix-pandas-version`), `tests/test_outputs.py` only ever reads the
+  already-built `/app/src` inside the running container
+  (`shutil.copytree("/app/src", ...)`) and never touches `tests/src/` on
+  disk directly, so the fix is safe and semantically correct: copy the
+  referenced upstream path into the converted task's own `environment/`
+  (e.g. `environment/src/`) and rewrite the Dockerfile's `COPY` line to
+  reference that local path (`COPY src/ /app/src/`) instead of `tests/...`.
+  Do NOT apply this rewrite mechanically without checking -- if a test
+  script instead reads the referenced files directly off disk at verify
+  time (not through something the Dockerfile already baked into the
+  image), copying into `environment/` alone would not be enough and needs
+  a different fix; note that case in a `# NOTE:` instead of guessing.
 - `tests/test_outputs.py` -> copy verbatim into `tests/test_outputs.py`.
   `run-tests.sh` -> `tests/test.sh`, with TWO required changes, not a
   verbatim copy:
@@ -174,22 +195,62 @@ storage = "10G"
   `${T_BENCH_TASK_...}`/`${T_BENCH_CONTAINER_...}`. Those variables are
   populated by Terminal-Bench's own `tb` harness and are meaningless inside
   Harbor -- copying this file verbatim breaks Harbor's own compose overlay
-  at run time (confirmed empirically: `services.client.container_name ''
-  does not match pattern`, because the template variable resolves to an
-  empty string outside `tb`). **Do NOT copy this boilerplate file at all** --
-  Harbor's own `docker-compose-build.yaml` already provides the equivalent
-  single-service build-from-Dockerfile behavior. Only if the upstream
-  `docker-compose.yaml` defines **more than one service**, or a service that
-  is not just this single-container template (e.g. a real database sidecar,
-  multiple cooperating containers), copy it into
-  `environment/docker-compose.yaml` and add a `# NOTE:` in `task.toml`
-  flagging that this task needs human review for genuine multi-container
-  support -- that case is a real, disclosed gap this adapter does not solve.
+  at run time (confirmed empirically across several real tasks, all the
+  same root cause: an unresolved `${T_BENCH_...}` variable resolves to an
+  empty string, which then fails compose validation or `docker` itself in
+  different ways depending which field it's in --
+  `services.client.container_name '' does not match pattern`, `invalid
+  mount path: ':' mount path must be absolute`, `invalid tag "__server":
+  invalid reference format`). **Do NOT copy this boilerplate file at all**
+  when it defines only one real service -- Harbor's own
+  `docker-compose-build.yaml` already provides the equivalent single-service
+  build-from-Dockerfile behavior.
+- If the upstream `docker-compose.yaml` defines **more than one service**
+  (e.g. a real database sidecar, multiple cooperating containers --
+  confirmed real examples: `security-vulhub-minio`'s 3 minio nodes,
+  `simple-sheets-put`'s `api`+`db`, `simple-web-scraper`'s `server`), you
+  DO need to keep it, but every `${T_BENCH_...}` reference anywhere in the
+  file must be stripped first -- not just on the `client`/main service, on
+  EVERY service (confirmed real bug: `simple-web-scraper`'s `server`
+  service also had `image: ${T_BENCH_TASK_DOCKER_NAME_PREFIX}__server`,
+  which broke the same way). Concretely, for every service in the file:
+  - Remove `image:` and `container_name:` lines whose value contains
+    `${T_BENCH_...}` (Harbor's own build overlay supplies the equivalent
+    for its `main` service; other services needing a real fixed image name
+    should just not set one, letting compose auto-name it, unless the
+    service also has a real, non-template `image:` like
+    `vulhub/minio:2023-02-27T18-10-45Z` -- keep those verbatim).
+  - Remove the `environment: - TEST_DIR=${T_BENCH_TEST_DIR}` line -- this
+    variable exists only so the upstream task's own `run-tests.sh` can find
+    the test directory via `$TEST_DIR`; since you already rewrite
+    `tests/test.sh` to hardcode `/tests/test_outputs.py` (see below), this
+    variable is dead in the converted task and safe to drop entirely,
+    along with the whole `environment:` key on that service if it becomes
+    empty.
+  - Remove `volumes:` entries referencing `${T_BENCH_TASK_LOGS_PATH}`,
+    `${T_BENCH_TASK_AGENT_LOGS_PATH}`, or any other `${T_BENCH_...}`
+    variable -- Harbor manages its own agent/verifier log directories
+    separately; these bind mounts are a `tb`-harness-specific mechanism
+    with no Harbor equivalent needed, and an unresolved one crashes
+    `docker compose` (`invalid mount path: ':' mount path must be
+    absolute`). Do NOT try to substitute a Harbor equivalent path here --
+    just delete the mount entries.
+  - Keep everything else verbatim: build context/dockerfile paths, ports,
+    healthcheck, depends_on, networks, and any OTHER service's own real
+    (non-`T_BENCH`) environment variables and image references
+    (`MINIO_ROOT_USER`, `POSTGRES_PASSWORD`, `vulhub/minio:...`, etc.).
+  Add a `# NOTE:` in `task.toml` that this task's multi-container wiring
+  (how the agent's own container -- Harbor's `main` service -- is meant to
+  reach the sidecars) has not been verified end to end and needs human
+  review; this fix only addresses the specific compose-merge crash, not full
+  multi-container correctness.
 - `solution.sh`, if present -> `solution/solve.sh` verbatim.
 
 ## Tooling guidance
 
 Use the `write` tool directly for every text file you produce (task.toml, instruction.md, tests/test.sh, etc.) -- do not use bash `cp`/process-substitution tricks to synthesize file content. Use bash `cp`/`cp -r` only to copy an upstream file byte-for-byte into the output tree unchanged.
+
+Some upstream tasks include large auxiliary data files (e.g. a multi-megabyte test fixture). Do NOT read a file's full content into context just to decide whether/where to copy it -- if a file is large (use `bash: du -h` or `wc -l` to check size cheaply, do not open it with the read tool), copy it straight through with `cp`/`cp -r` without reading it first; only read files you actually need to understand or transform (task.yaml, Dockerfile, the pytest verifier, etc.).
 
 ## Output contract
 
