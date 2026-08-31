@@ -86,6 +86,36 @@ Adapter work is validated on 1-2 sample tasks before any full-scale run, the
 same pilot-first discipline used for the single `gpt2-codegolf` task before
 any Terminal-Bench-2.0-wide run.
 
+## Full-scale conversion: `infra/adapters/batch_run.py`
+
+Once the sample-task pilot is validated, `batch_run.py` runs the same
+convert -> mechanical-verify -> real-`harbor run` pipeline over a list of
+task ids with bounded concurrency (`asyncio.Semaphore`), publishing each
+task to the HF dataset immediately as it passes (not batched at the very
+end, so an interrupted run never loses already-validated progress). A task
+must pass **both** the mechanical check and produce a valid reward file
+from a real `harbor run` trial to be published -- "pass" for the real-run
+layer means the build+agent+verify machinery worked, not that the subject
+agent solved the task (see the note above). Every outcome (including
+failures, with a reason) is appended to a JSONL log, never silently
+dropped, never retried indefinitely.
+
+Subject-agent credential fallback: the real `harbor run` trial tries Apex
+(`opencode`/`openai`) first; on a credential/balance-looking error it
+retries once with OpenAI OAuth (the `codex` agent +
+`CODEX_AUTH_JSON_PATH`, the same pattern
+`infra/benchmarks/terminal-bench-2/gpt2-codegolf.yaml` uses for its natural
+run). If OAuth is also unavailable, the task is logged
+`BLOCKED_ON_CREDENTIALS` -- not silently failed, not spun on retries.
+
+Known, disclosed categories of legitimate (non-systemic) failure seen in
+practice: tasks whose environment build genuinely needs more time than the
+smoke-test budget (e.g. compiling a Linux kernel or QEMU image), and tasks
+whose own premise conflicts with the smoke-test's subject agent needing
+network access to self-install (e.g. a task about recovering from a broken
+network). These are recorded with their real reason, not force-passed.
+
+
 ## Manifest schema
 
 ```yaml
