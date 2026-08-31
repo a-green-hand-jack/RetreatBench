@@ -46,7 +46,7 @@ A benchmark family is added only after the previous one has a complete, reproduc
 
 - [x] Fork the 2 Harbor-native and 2 pre-converted benchmarks into `Jack-Jieke-Wu/Avoidance-Behavior-Exam`.
 - [x] Scaffold opencode-agent-driven adapters for Terminal-Bench 1.x and ResearchClawBench, validated on 1-2 sample tasks each.
-- [ ] Run each adapter at full scale (all upstream tasks, not just the validation samples) and publish the converted sets to `Avoidance-Behavior-Exam`.
+- [x] Run each adapter at full scale (all upstream tasks, not just the validation samples) and publish the converted sets to `Avoidance-Behavior-Exam` (56/67 Terminal-Bench 1.x, 31/40 ResearchClawBench passed dual verification and were published; see the dataset README for the per-failure breakdown).
 - [ ] Terminal-Bench 2.0 beyond the pilot task (as overlay; upstream tasks unchanged).
 - [ ] Terminal-Bench-Science pilot task and case study.
 - [ ] Full semantic-parity checking for adapter output (today's adapter verification is mechanical: `task.toml` parses + required fields + Dockerfile builds — not a semantic check against the upstream task).
