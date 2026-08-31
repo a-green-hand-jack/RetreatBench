@@ -1,21 +1,35 @@
-# Needs-adapter placeholder: no source/target until infra/adapters/researchclawbench/
-# produces a converted task tree.
-#
-# Upstream uses its own ResearchHarness/`rcb-eval` CLI with no task.toml or
-# Harbor integration anywhere -- confirmed by research this session.
 benchmark: researchclawbench
-status: needs-adapter
+status: adapted
 
 upstream:
   repo: InternScience/ResearchClawBench
   task_count_hint: "40 tasks, 10 domains"
 
-source: null
+source:
+  repo: InternScience/ResearchClawBench
+  revision: 5bc7963f82b8cc4f13ea27e7524709e0d6a12a96
+  task_dir: tasks/
+
 target:
   hub_repo: Jack-Jieke-Wu/Avoidance-Behavior-Exam
   path: researchclawbench/
 
 notes: |
   Conversion approach: opencode-agent-driven, not a hand-written parser --
-  see infra/adapters/researchclawbench/. Fill in `source` here once the
-  adapter has produced and verified a converted task tree worth publishing.
+  see infra/adapters/researchclawbench/.
+
+  Provenance self-check (prompted by the Terminal-Bench 1.x revision defect,
+  where conversion had silently used the default-branch HEAD instead of the
+  officially pinned release commit): ResearchClawBench does NOT have the same
+  problem, for two independently verified reasons.
+
+    1. There is no pinned release to have missed -- the upstream repo carries
+       zero tags and publishes no versioned dataset manifest, unlike
+       Terminal-Bench's `datasets/terminal-bench-core-v0.yaml`. The default
+       branch is the only thing there is to convert from.
+    2. The revision the conversion actually used, recorded above, is still
+       exactly `origin/main`, and `git log <rev>..origin/main -- tasks/`
+       returns 0 commits -- the task tree has not drifted since conversion.
+
+  So the published ResearchClawBench set does not need re-conversion; the
+  revision is simply recorded here now, where it had previously been null.
