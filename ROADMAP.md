@@ -46,7 +46,7 @@ A benchmark family is added only after the previous one has a complete, reproduc
 
 - [x] Fork the 2 Harbor-native and 2 pre-converted benchmarks into `Jack-Jieke-Wu/Avoidance-Behavior-Exam`.
 - [x] Scaffold opencode-agent-driven adapters for Terminal-Bench 1.x and ResearchClawBench, validated on 1-2 sample tasks each.
-- [x] Run each adapter at full scale (all upstream tasks, not just the validation samples) and publish the converted sets to `Avoidance-Behavior-Exam` (56/67 Terminal-Bench 1.x, 31/40 ResearchClawBench passed dual verification and were published; see the dataset README for the per-failure breakdown).
+- [x] Run each adapter at full scale (all upstream tasks, not just the validation samples) and publish the converted sets to `Avoidance-Behavior-Exam` (65/67 Terminal-Bench 1.x, 39/40 ResearchClawBench passed dual verification and were published after fixing three real bugs found on retry -- multi-container `docker-compose.yaml` template leakage, `fix-pandas-version`'s out-of-context `COPY`, and `cron-broken-network`'s subject-agent mismatch; see the dataset README for the per-failure breakdown and change log). 2 remaining failures are genuinely heavy-resource tasks (QEMU boot verification, OOM on real training); 1 (`Information_002`) is held pending a human decision on a possible false-positive private-data-leak flag.
 - [ ] Terminal-Bench 2.0 beyond the pilot task (as overlay; upstream tasks unchanged).
 - [ ] Terminal-Bench-Science pilot task and case study.
 - [ ] Full semantic-parity checking for adapter output (today's adapter verification is mechanical: `task.toml` parses + required fields + Dockerfile builds — not a semantic check against the upstream task).
