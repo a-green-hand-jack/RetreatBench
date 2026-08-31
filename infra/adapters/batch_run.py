@@ -64,6 +64,8 @@ AGENT_TIMEOUT_MULTIPLIER = "0.5"
 VERIFIER_TIMEOUT_MULTIPLIER = "3.0"  # some verifiers (e.g. build-initramfs-qemu) need more than the upstream's 180s default
 CONVERT_TIMEOUT_SEC = 900  # bumped: some tasks have large auxiliary data files
 HARBOR_TIMEOUT_SEC = 2100  # bumped for a heavy-task retry pass (kernel/QEMU builds etc.)
+HARBOR_GRACE_SEC = 120  # after SIGTERM, let Harbor finish writing result.json before SIGKILL
+APEX_BASE_URL = "https://api.apexin.ai/v1"
 CODEX_AUTH_JSON_PATH = str(Path.home() / ".codex" / "auth.json")
 CREDENTIAL_ERROR_PATTERNS = re.compile(
     r"insufficient account balance|insufficient_quota|invalid_api_key|"
@@ -79,7 +81,24 @@ def log_line(log_file: Path, record: dict) -> None:
     print(f"[{record['benchmark']}/{record['task_id']}] {record['status']}: {record.get('detail', '')}")
 
 
-async def run_cmd(cmd: list[str], *, cwd: Path | None = None, timeout: int, env: dict | None = None) -> tuple[int, str]:
+async def run_cmd(
+    cmd: list[str],
+    *,
+    cwd: Path | None = None,
+    timeout: int,
+    env: dict | None = None,
+    grace_sec: int = 0,
+) -> tuple[int, str]:
+    """Run a subprocess with a timeout.
+
+    On timeout, when grace_sec > 0, send SIGTERM first and give the child that
+    long to shut down on its own before SIGKILL. This matters for `harbor run`:
+    a bare SIGKILL can land after the verifier has already written reward.txt
+    but before Harbor finishes writing the trial's result.json, producing a
+    trial whose evidence is real but incomplete. (Observed on Astronomy_001:
+    reward.txt=0 and a fully-completed verifier stdout, but no result.json,
+    because the wrapper killed Harbor's own bookkeeping mid-write.)
+    """
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         cwd=str(cwd) if cwd else None,
@@ -90,9 +109,22 @@ async def run_cmd(cmd: list[str], *, cwd: Path | None = None, timeout: int, env:
     try:
         out, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
     except asyncio.TimeoutError:
-        proc.kill()
-        await proc.wait()
-        return 124, f"timed out after {timeout}s"
+        if grace_sec > 0:
+            try:
+                proc.terminate()
+                out, _ = await asyncio.wait_for(proc.communicate(), timeout=grace_sec)
+                return 124, (
+                    f"timed out after {timeout}s; exited within {grace_sec}s grace period "
+                    f"after SIGTERM\n" + out.decode(errors="replace")[-1500:]
+                )
+            except (asyncio.TimeoutError, ProcessLookupError):
+                pass
+        try:
+            proc.kill()
+            await proc.wait()
+        except ProcessLookupError:
+            pass
+        return 124, f"timed out after {timeout}s (killed after {grace_sec}s grace period)"
     return proc.returncode, out.decode(errors="replace")
 
 
@@ -143,6 +175,22 @@ def find_exception_file(job_dir: Path, task_id: str) -> Path | None:
     return Path(matches[0]) if matches else None
 
 
+def evidence_completeness(job_dir: Path) -> dict:
+    """Describe how complete a trial's on-disk evidence actually is.
+
+    A reward file is the project's pass criterion, but it is not the whole
+    record: Harbor writes the trial's result.json after the verifier finishes.
+    A pass backed by reward.txt WITHOUT result.json is real but weaker (the
+    run was cut short before Harbor closed its books), and that distinction
+    must survive into the log rather than being flattened into a bare "PASS".
+    """
+    return {
+        "reward_file": bool(glob.glob(str(job_dir / "*__*" / "verifier" / "reward.*"))),
+        "trial_result_json": bool(glob.glob(str(job_dir / "*__*" / "result.json"))),
+        "verifier_stdout": bool(glob.glob(str(job_dir / "*__*" / "verifier" / "test-stdout.txt"))),
+    }
+
+
 async def harbor_run_once(
     *, task_dir: Path, job_name: str, repo_root: Path, credential: str, env_file: Path | None
 ) -> tuple[int, str]:
@@ -164,20 +212,31 @@ async def harbor_run_once(
         "--yes",
     ]
     if credential == "apex":
-        cmd += ["--agent", "opencode", "--model", HARBOR_MODEL]
+        # Pass the Apex wiring explicitly rather than relying on ambient env
+        # leaking through to Harbor's installed-agent setup. Harbor's ${VAR}
+        # template syntax resolves from this process's environment, so the
+        # secret itself never appears in the command line or process list.
+        cmd += [
+            "--agent", "opencode",
+            "--model", HARBOR_MODEL,
+            "--ae", "OPENAI_API_KEY=${OPENAI_API_KEY}",
+            "--ae", f"OPENAI_BASE_URL={APEX_BASE_URL}",
+        ]
         if env_file is not None:
             cmd += ["--env-file", str(env_file)]
     elif credential == "oauth":
         cmd += ["--agent", "codex", "--model", CODEX_MODEL, "--ae", f"CODEX_AUTH_JSON_PATH={CODEX_AUTH_JSON_PATH}"]
     else:
         raise ValueError(credential)
-    return await run_cmd(cmd, cwd=repo_root, timeout=HARBOR_TIMEOUT_SEC)
+    return await run_cmd(
+        cmd, cwd=repo_root, timeout=HARBOR_TIMEOUT_SEC, grace_sec=HARBOR_GRACE_SEC
+    )
 
 
 async def harbor_run_with_fallback(
     *, task_id: str, task_dir: Path, repo_root: Path, env_file: Path | None
-) -> tuple[str, str, str | None, str | None]:
-    """Returns (status, detail, credential_used, reward)."""
+) -> tuple[str, str, str | None, str | None, dict]:
+    """Returns (status, detail, credential_used, reward, evidence)."""
 
     oauth_available = Path(CODEX_AUTH_JSON_PATH).is_file() and Path(CODEX_AUTH_JSON_PATH).stat().st_size > 0
 
@@ -186,12 +245,22 @@ async def harbor_run_with_fallback(
     code, output = await harbor_run_once(
         task_dir=task_dir, job_name=job_name, repo_root=repo_root, credential="apex", env_file=env_file
     )
+    evidence = evidence_completeness(job_dir)
+    evidence["wrapper_timed_out"] = code == 124
     reward_file = find_reward_file(job_dir, task_id)
     if reward_file is not None:
         try:
             reward = reward_file.read_text().strip()
             float(reward)
-            return "PASS", output[-800:], "apex", reward
+            detail = output[-800:]
+            if not evidence["trial_result_json"]:
+                detail = (
+                    "[PARTIAL EVIDENCE] reward file present and valid, but Harbor wrote no "
+                    "trial result.json -- the run was cut short before Harbor closed its "
+                    "books. Pass criterion is met but the record is weaker than a clean run.\n"
+                    + detail
+                )
+            return "PASS", detail, "apex", reward, evidence
         except ValueError:
             pass
 
@@ -200,7 +269,7 @@ async def harbor_run_with_fallback(
     credential_issue = bool(CREDENTIAL_ERROR_PATTERNS.search(exc_text))
 
     if not credential_issue:
-        return "HARBOR_RUN_FAIL", exc_text[-1500:], "apex", None
+        return "HARBOR_RUN_FAIL", exc_text[-1500:], "apex", None, evidence
 
     if not oauth_available:
         return (
@@ -217,19 +286,24 @@ async def harbor_run_with_fallback(
         task_dir=task_dir, job_name=job_name_oauth, repo_root=repo_root, credential="oauth", env_file=None
     )
     reward_file2 = find_reward_file(job_dir_oauth, task_id)
+    evidence2 = evidence_completeness(job_dir_oauth)
+    evidence2["wrapper_timed_out"] = code2 == 124
     if reward_file2 is not None:
         try:
             reward2 = reward_file2.read_text().strip()
             float(reward2)
-            return "PASS", output2[-800:], "oauth-fallback", reward2
+            detail2 = output2[-800:]
+            if not evidence2["trial_result_json"]:
+                detail2 = "[PARTIAL EVIDENCE] reward file valid but no trial result.json.\n" + detail2
+            return "PASS", detail2, "oauth-fallback", reward2, evidence2
         except ValueError:
             pass
 
     exc_file2 = find_exception_file(job_dir_oauth, task_id)
     exc_text2 = exc_file2.read_text(errors="replace") if exc_file2 else output2
     if CREDENTIAL_ERROR_PATTERNS.search(exc_text2):
-        return "BLOCKED_ON_CREDENTIALS", f"Both apex and oauth failed on credentials: {exc_text2[-800:]}", "oauth-fallback", None
-    return "HARBOR_RUN_FAIL", exc_text2[-1500:], "oauth-fallback", None
+        return "BLOCKED_ON_CREDENTIALS", f"Both apex and oauth failed on credentials: {exc_text2[-800:]}", "oauth-fallback", None, evidence2
+    return "HARBOR_RUN_FAIL", exc_text2[-1500:], "oauth-fallback", None, evidence2
 
 
 async def publish_task(*, out_dir: Path, target_hub_path: str, task_id: str) -> tuple[bool, str]:
@@ -284,11 +358,11 @@ async def process_task(
             log_line(log_file, {**record, "status": "MECHANICAL_FAIL", "detail": detail})
             return
 
-        status, detail, credential_used, reward = await harbor_run_with_fallback(
+        status, detail, credential_used, reward, evidence = await harbor_run_with_fallback(
             task_id=task_id, task_dir=out_dir, repo_root=repo_root, env_file=env_file
         )
         if status != "PASS":
-            log_line(log_file, {**record, "status": status, "detail": detail, "credential_used": credential_used})
+            log_line(log_file, {**record, "status": status, "detail": detail, "credential_used": credential_used, "evidence": evidence})
             return
 
         published = False
@@ -304,6 +378,7 @@ async def process_task(
                 "detail": detail,
                 "credential_used": credential_used,
                 "reward": reward,
+                "evidence": evidence,
                 "published": published,
                 "publish_detail": publish_detail,
             },
