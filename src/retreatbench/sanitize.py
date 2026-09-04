@@ -199,7 +199,13 @@ def sanitize_value(value: Any, report: SanitizationReport, key: str | None = Non
 
 def _tree_digest(root: Path) -> str:
     digest = hashlib.sha256()
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+    # Manifests contain the digest and upload status themselves, so including
+    # them would make the advertised tree hash self-referential. They remain
+    # public artifacts, but the digest covers the sanitized evidence payload.
+    metadata_names = {"sanitization-report.json", "trial-manifest.json"}
+    for path in sorted(
+        item for item in root.rglob("*") if item.is_file() and item.name not in metadata_names
+    ):
         digest.update(str(path.relative_to(root)).encode("utf-8"))
         digest.update(path.read_bytes())
     return digest.hexdigest()

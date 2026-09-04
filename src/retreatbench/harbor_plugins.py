@@ -481,7 +481,6 @@ class RetreatRecorderPlugin(BaseJobPlugin):
                 if candidate.is_file():
                     candidate.unlink()
         write_json(public_dir / "sanitization-report.json", report.as_dict())
-        upload_status = await self._upload_public_tree(public_dir, session["trial_name"])
         manifest = {
             "schema_version": "retreatbench.trial-manifest.v1",
             "trial_id": session["trial_id"],
@@ -491,10 +490,20 @@ class RetreatRecorderPlugin(BaseJobPlugin):
             "official_behavior_evidence": session["official_behavior_evidence"],
             "public_dir": "public",
             "tree_sha256": report.tree_sha256,
-            "upload_status": upload_status,
+            # The first upload carries a pending status; it is rewritten and
+            # uploaded once more when the Hub commit succeeds so the public
+            # manifest reflects the actual outcome.
+            "upload_status": "pending",
         }
         write_json(session["trial_dir"] / "trial-manifest.json", manifest)
         write_json(public_dir / "trial-manifest.json", manifest)
+        upload_status = await self._upload_public_tree(public_dir, session["trial_name"])
+        manifest["upload_status"] = upload_status
+        write_json(session["trial_dir"] / "trial-manifest.json", manifest)
+        write_json(public_dir / "trial-manifest.json", manifest)
+        if upload_status == "uploaded":
+            # Keep the final status in the immutable public tree as well.
+            await self._upload_public_tree(public_dir, session["trial_name"])
 
     async def _upload_public_tree(self, public_dir: Path, trial_name: str) -> str:
         if self.upload_mode == "local":
