@@ -45,6 +45,13 @@ def _dump_model(value: Any) -> Any:
     return {"value": str(value)}
 
 
+def _event_result(event: Any) -> Any:
+    """Return a callback result for both Harbor TrialResult and test events."""
+
+    result = getattr(event, "result", None)
+    return event if result is None else result
+
+
 def _digest_text(value: bytes | str) -> str:
     data = value if isinstance(value, bytes) else value.encode("utf-8", errors="replace")
     return hashlib.sha256(data).hexdigest()
@@ -206,7 +213,8 @@ class RetreatRecorderPlugin(BaseJobPlugin):
                 self._registered_callbacks.add(name)
 
     def _event_identity(self, event: Any) -> tuple[str, str, str]:
-        trial_id = str(getattr(event, "trial_id", "unknown"))
+        raw_id = getattr(event, "trial_id", None) or getattr(event, "id", None)
+        trial_id = str(raw_id or getattr(event, "trial_name", "unknown"))
         trial_name = _safe_trial_name(str(getattr(event, "trial_name", trial_id)))
         task_name = str(getattr(event, "task_name", "unknown"))
         return trial_id, trial_name, task_name
@@ -281,7 +289,7 @@ class RetreatRecorderPlugin(BaseJobPlugin):
         return session
 
     def _emit_event(self, session: dict[str, Any], event_type: str, event: Any) -> None:
-        result = _dump_model(getattr(event, "result", {}))
+        result = _dump_model(_event_result(event))
         payload = {
             "schema_version": "retreatbench.recorder-event.v1",
             "event_type": event_type,
@@ -327,7 +335,7 @@ class RetreatRecorderPlugin(BaseJobPlugin):
 
     async def _on_agent_ended(self, event: Any) -> None:
         session = await self._ensure_session(event)
-        result = _dump_model(getattr(event, "result", {}))
+        result = _dump_model(_event_result(event))
         self._capture_solver_trace(session, result)
         self._emit_event(session, "agent_ended", event)
         # Freeze the observer's candidate inputs before any continuation or
@@ -401,7 +409,7 @@ class RetreatRecorderPlugin(BaseJobPlugin):
     async def _on_trial_ended(self, event: Any) -> None:
         session = await self._ensure_session(event)
         self._emit_event(session, "trial_ended", event)
-        trial_result = _dump_model(getattr(event, "result", {}))
+        trial_result = _dump_model(_event_result(event))
         write_json(session["trial_dir"] / "harbor-trial-result.json", trial_result)
         self._capture_solver_trace(session, trial_result)
         await self._finish_observer(session)
