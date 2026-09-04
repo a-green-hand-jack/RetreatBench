@@ -39,7 +39,7 @@ class FakeJob:
 
 
 def test_plugin_registers_lifecycle_hooks_and_creates_sanitized_trial(tmp_path: Path) -> None:
-    plugin = RecorderLocal(output_dir=str(tmp_path))
+    plugin = RecorderLocal(output_dir=str(tmp_path), recorder_command="/does/not/exist")
     job = FakeJob()
     async def run_trial() -> None:
         await plugin.on_job_start(job)
@@ -80,7 +80,7 @@ def test_plugin_aliases_are_stable() -> None:
 
 
 def test_successful_trial_materializes_non_retreat_context(tmp_path: Path) -> None:
-    plugin = RecorderLocal(output_dir=str(tmp_path))
+    plugin = RecorderLocal(output_dir=str(tmp_path), recorder_command="/does/not/exist")
     job = FakeJob()
     event = SimpleNamespace(
         trial_id="t-success",
@@ -104,7 +104,7 @@ def test_successful_trial_materializes_non_retreat_context(tmp_path: Path) -> No
 
 
 def test_solver_profile_excludes_recorder_artifacts(tmp_path: Path) -> None:
-    plugin = RecorderExportSolver(output_dir=str(tmp_path))
+    plugin = RecorderExportSolver(output_dir=str(tmp_path), recorder_command="/does/not/exist")
     job = FakeJob()
     event = SimpleNamespace(
         trial_id="t2",
@@ -127,7 +127,7 @@ def test_solver_profile_excludes_recorder_artifacts(tmp_path: Path) -> None:
 
 
 def test_plugin_keeps_trial_name_inside_output_dir(tmp_path: Path) -> None:
-    plugin = RecorderLocal(output_dir=str(tmp_path))
+    plugin = RecorderLocal(output_dir=str(tmp_path), recorder_command="/does/not/exist")
     job = FakeJob()
     event = SimpleNamespace(trial_id="t3", trial_name="../../outside", task_name="x", result={})
 
