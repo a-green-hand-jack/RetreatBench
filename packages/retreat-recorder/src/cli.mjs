@@ -73,7 +73,9 @@ function deterministicRecord(request, events, recordingMode) {
     status: "completed",
     mode: recordingMode,
     recording_mode: request.recording_mode || "parallel_observer",
-    official_behavior_evidence: request.recording_mode !== "post_run",
+    // Only a successful OpenCode observer session is official behavior
+    // evidence. Explicit deterministic/finalize modes are degraded outputs.
+    official_behavior_evidence: recordingMode === "opencode" && request.recording_mode !== "post_run",
     trial_id: request.trial_id || "unknown",
     event_count: events.length,
     event_types: eventTypes,
@@ -180,7 +182,10 @@ async function runObserve() {
     if (mode !== "deterministic") {
       if (spawnSync(process.env.OPENCODE_BIN || "opencode", ["--version"]).status === 0) {
         payload.opencode_session = await runOpenCode(request, outputPath, tracePath);
-        if (payload.opencode_session.status === "failed") payload.mode = "degraded-deterministic";
+        if (payload.opencode_session.status === "failed") {
+          payload.mode = "degraded-deterministic";
+          payload.official_behavior_evidence = false;
+        }
       } else {
         payload.mode = "degraded-deterministic";
         payload.official_behavior_evidence = false;

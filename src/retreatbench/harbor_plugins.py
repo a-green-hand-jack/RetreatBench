@@ -19,7 +19,7 @@ from typing import Any
 from urllib.parse import unquote, urlparse
 
 from retreatbench.decision import classify_trial
-from retreatbench.io import load_model, write_json
+from retreatbench.io import load_model, read_json, write_json
 from retreatbench.models import (
     BehaviorResult,
     DecisionContext,
@@ -360,6 +360,7 @@ class RetreatRecorderPlugin(BaseJobPlugin):
     async def _finish_observer(self, session: dict[str, Any]) -> None:
         process = session.get("process")
         if process is None:
+            session["official_behavior_evidence"] = False
             if not session["result_path"].is_file():
                 write_json(session["result_path"], {
                     "schema_version": "retreatbench.recorder-result.v1",
@@ -376,6 +377,7 @@ class RetreatRecorderPlugin(BaseJobPlugin):
         try:
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
             if process.returncode != 0:
+                session["official_behavior_evidence"] = False
                 if not session["result_path"].is_file():
                     write_json(session["result_path"], {
                         "schema_version": "retreatbench.recorder-result.v1",
@@ -390,7 +392,20 @@ class RetreatRecorderPlugin(BaseJobPlugin):
                 session["recorder_status"] = "failed"
             else:
                 session["recorder_status"] = "completed"
+                # OpenCode may have exited successfully while still reporting
+                # a degraded deterministic fallback. Preserve that distinction
+                # in the Harbor-facing manifest and behavior result.
+                try:
+                    recorder_result = read_json(session["result_path"])
+                except (OSError, ValueError, json.JSONDecodeError):
+                    recorder_result = {}
+                if isinstance(recorder_result, dict):
+                    session["official_behavior_evidence"] = bool(
+                        session["official_behavior_evidence"]
+                        and recorder_result.get("official_behavior_evidence") is True
+                    )
         except TimeoutError:
+            session["official_behavior_evidence"] = False
             process.kill()
             await process.wait()
             write_json(session["result_path"], {

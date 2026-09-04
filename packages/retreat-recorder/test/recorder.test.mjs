@@ -26,6 +26,7 @@ test("observer emits structured result after the lifecycle closes", () => {
   assert.equal(result.event_count, 3);
   assert.deepEqual(result.event_types, ["trial_started", "agent_ended", "trial_ended"]);
   assert.equal(result.candidate, false);
+  assert.equal(result.official_behavior_evidence, false);
 });
 
 test("default observer records a degraded status when OpenCode is unavailable", () => {

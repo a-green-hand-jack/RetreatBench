@@ -20,7 +20,7 @@ VENV="${RETREATBENCH_VENV:-${HOME}/.retreatbench/venv}"
 HARBOR_VERSION="${RETREATBENCH_HARBOR_VERSION:-0.20.0}"
 
 install_system_deps() {
-  [ "$(uname -s)" = "Linux" ] || die "automatic system dependency installation currently supports Linux only"
+  [ "$(uname -s)" = "Linux" ] || die "automatic system dependency installation currently supports Ubuntu/Debian Linux only; install Python >=3.11, Node >=20, npm, Docker, git, and curl manually"
   command -v apt-get >/dev/null 2>&1 || die "apt-get is required for automatic dependency installation; install Python >=3.11, Node >=20, npm, Docker, git, and curl manually"
   if [ "$(id -u)" -eq 0 ]; then
     SUDO=""
@@ -54,6 +54,11 @@ install_system_deps() {
     $SUDO systemctl enable --now docker >/dev/null 2>&1 || true
   fi
 }
+
+# v1 deliberately has one supported host contract.  Fail clearly before any
+# repository clone or user-directory mutation on other operating systems.
+[ "$(uname -s)" = "Linux" ] || die "RetreatBench v1 supports Ubuntu/Debian Linux only; install Python >=3.11, Node >=20, npm, Docker, git, and curl manually"
+[ -x "$(command -v apt-get 2>/dev/null || true)" ] || die "RetreatBench v1 requires apt-get on Ubuntu/Debian; install Python >=3.11, Node >=20, npm, Docker, git, and curl manually"
 
 if ! command -v python3 >/dev/null 2>&1 \
   || ! command -v node >/dev/null 2>&1 \
