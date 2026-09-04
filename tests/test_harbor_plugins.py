@@ -41,11 +41,12 @@ class FakeJob:
 def test_plugin_registers_lifecycle_hooks_and_creates_sanitized_trial(tmp_path: Path) -> None:
     plugin = RecorderLocal(output_dir=str(tmp_path))
     job = FakeJob()
-    asyncio.run(plugin.on_job_start(job))
-    assert set(job.callbacks) == {
-        "trial_started", "environment_started", "agent_started", "agent_ended",
-        "verification_started", "trial_ended", "trial_cancelled",
-    }
+    async def run_trial() -> None:
+        await plugin.on_job_start(job)
+        await job.callbacks["trial_started"](event)
+        await job.callbacks["agent_started"](event)
+        await job.callbacks["agent_ended"](event)
+        await job.callbacks["trial_ended"](event)
 
     event = SimpleNamespace(
         trial_id="t1",
@@ -53,10 +54,11 @@ def test_plugin_registers_lifecycle_hooks_and_creates_sanitized_trial(tmp_path: 
         task_name="bench/task-1",
         result={"agent_result": {"message": "done"}},
     )
-    asyncio.run(job.callbacks["trial_started"](event))
-    asyncio.run(job.callbacks["agent_started"](event))
-    asyncio.run(job.callbacks["agent_ended"](event))
-    asyncio.run(job.callbacks["trial_ended"](event))
+    asyncio.run(run_trial())
+    assert set(job.callbacks) == {
+        "trial_started", "environment_started", "agent_started", "agent_ended",
+        "verification_started", "trial_ended", "trial_cancelled",
+    }
 
     trial = tmp_path / "task-1"
     manifest = json.loads((trial / "trial-manifest.json").read_text())
@@ -80,14 +82,18 @@ def test_plugin_aliases_are_stable() -> None:
 def test_successful_trial_materializes_non_retreat_context(tmp_path: Path) -> None:
     plugin = RecorderLocal(output_dir=str(tmp_path))
     job = FakeJob()
-    asyncio.run(plugin.on_job_start(job))
     event = SimpleNamespace(
         trial_id="t-success",
         trial_name="task-success",
         task_name="bench/task-success",
         result={"verifier_result": {"rewards": {"reward": 1.0}}},
     )
-    asyncio.run(job.callbacks["trial_ended"](event))
+
+    async def run_trial() -> None:
+        await plugin.on_job_start(job)
+        await job.callbacks["trial_ended"](event)
+
+    asyncio.run(run_trial())
 
     trial = tmp_path / "task-success"
     context = json.loads((trial / "decision_context.json").read_text())
@@ -100,15 +106,19 @@ def test_successful_trial_materializes_non_retreat_context(tmp_path: Path) -> No
 def test_solver_profile_excludes_recorder_artifacts(tmp_path: Path) -> None:
     plugin = RecorderExportSolver(output_dir=str(tmp_path))
     job = FakeJob()
-    asyncio.run(plugin.on_job_start(job))
     event = SimpleNamespace(
         trial_id="t2",
         trial_name="task-2",
         task_name="bench/task-2",
         result={"trajectory": [{"action": "write"}]},
     )
-    asyncio.run(job.callbacks["agent_ended"](event))
-    asyncio.run(job.callbacks["trial_ended"](event))
+
+    async def run_trial() -> None:
+        await plugin.on_job_start(job)
+        await job.callbacks["agent_ended"](event)
+        await job.callbacks["trial_ended"](event)
+
+    asyncio.run(run_trial())
 
     public = tmp_path / "task-2" / "public"
     assert (public / "solver_trace.json").exists()
@@ -119,8 +129,12 @@ def test_solver_profile_excludes_recorder_artifacts(tmp_path: Path) -> None:
 def test_plugin_keeps_trial_name_inside_output_dir(tmp_path: Path) -> None:
     plugin = RecorderLocal(output_dir=str(tmp_path))
     job = FakeJob()
-    asyncio.run(plugin.on_job_start(job))
     event = SimpleNamespace(trial_id="t3", trial_name="../../outside", task_name="x", result={})
-    asyncio.run(job.callbacks["agent_ended"](event))
+
+    async def run_trial() -> None:
+        await plugin.on_job_start(job)
+        await job.callbacks["agent_ended"](event)
+
+    asyncio.run(run_trial())
     assert (tmp_path / "_" / "_" / "outside" / "solver_trace.json").exists()
     assert not (tmp_path.parent / "outside").exists()
