@@ -62,6 +62,9 @@ def main() -> int:
             "--resume-trajectory",
             "--plugin",
             "retreatbench.harbor_plugins:AvoidanceExportBoth",
+            "--yes",
+            "--n-concurrent",
+            "1",
         ]
         print("$ " + " ".join(command), flush=True)
         if args.dry_run:
