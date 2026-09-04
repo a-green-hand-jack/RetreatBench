@@ -12,6 +12,7 @@ import asyncio
 import hashlib
 import os
 import shutil
+from urllib.parse import unquote, urlparse
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,19 @@ def _safe_trial_name(value: str) -> str:
     """Keep Harbor-provided names inside the configured artifact directory."""
 
     return value.replace("..", "_").replace("\\", "_").strip("/") or "unknown"
+
+
+def _trial_dir_from_result(result: dict[str, Any]) -> Path | None:
+    """Resolve Harbor's file URI so the plugin can collect native artifacts."""
+
+    uri = result.get("trial_uri")
+    if not isinstance(uri, str):
+        return None
+    parsed = urlparse(uri)
+    if parsed.scheme != "file" or not parsed.path:
+        return None
+    path = Path(unquote(parsed.path))
+    return path if path.is_dir() else None
 
 
 def _reward_from_result(value: Any) -> float:
@@ -135,7 +149,12 @@ class RetreatAuditorPlugin(BaseJobPlugin):
 
         result = _dump_model(getattr(event, "result", {}))
         write_json(trial_dir / "performer-trial-result.json", result)
-        write_json(trial_dir / "performer_trace.json", result)
+        native_trial_dir = _trial_dir_from_result(result)
+        trajectory_path = native_trial_dir / "agent" / "trajectory.json" if native_trial_dir else None
+        if trajectory_path and trajectory_path.is_file():
+            shutil.copy2(trajectory_path, trial_dir / "performer_trace.json")
+        else:
+            write_json(trial_dir / "performer_trace.json", result)
         if isinstance(result, dict) and isinstance(result.get("decision_context"), dict):
             write_json(trial_dir / "decision_context.json", result["decision_context"])
         request = {
