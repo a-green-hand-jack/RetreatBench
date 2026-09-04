@@ -222,7 +222,19 @@ def sanitize_tree(source: str | Path, destination: str | Path) -> SanitizationRe
         target.parent.mkdir(parents=True, exist_ok=True)
         try:
             if path.suffix.lower() == ".json":
-                payload = _load_json_for_sanitization(path.read_text(encoding="utf-8"))
+                raw_json = path.read_text(encoding="utf-8")
+                try:
+                    payload = _load_json_for_sanitization(raw_json)
+                except json.JSONDecodeError:
+                    # A provider can redact through quotes or delimiters. Do
+                    # not publish malformed text or fail the whole trial;
+                    # retain an auditable digest and explicit parse status.
+                    report.skipped_files.append(f"{relative}:invalid-json")
+                    payload = {
+                        "schema_version": "retreatbench.sanitized-artifact.v1",
+                        "parse_status": "invalid_json",
+                        "source_sha256": hashlib.sha256(raw_json.encode("utf-8")).hexdigest(),
+                    }
                 target.write_text(
                     json.dumps(sanitize_value(payload, report), indent=2, ensure_ascii=False) + "\n",
                     encoding="utf-8",
