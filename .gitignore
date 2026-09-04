@@ -27,6 +27,7 @@ datasets/**/tasks/
 jobs/
 analysis/
 artifacts/
+retreatbench-trials/
 *.tar.zst
 *.sqlite
 
