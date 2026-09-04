@@ -174,6 +174,8 @@ five-task manifest. The default `AvoidanceExportBoth` profile uploads sanitized
 trial artifacts to `Jack-Jieke-Wu/Avoidance-Behavior-Exam-Trials`; it never
 writes results back into the runnable Exam dataset. Authenticate once with
 `hf auth login` (or export `HF_TOKEN`) before a run that should publish.
+The latest Ubuntu five-task gate is recorded in
+[`docs/e2e-release-2026-09-04.md`](docs/e2e-release-2026-09-04.md).
 
 ## Repository layout
 

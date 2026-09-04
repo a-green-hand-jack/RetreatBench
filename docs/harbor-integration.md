@@ -96,7 +96,17 @@ Harbor 0.20 has no host-native environment type: the built-in Linux task and
 separate verifier environments are Docker (or a supported remote provider).
 Therefore a TeX Live installation on the Ubuntu host is useful for preflight,
 but is not implicitly visible inside Harbor's isolated verifier container. The
-official task verifier remains unchanged; E2E work should either reuse a
-cached/prebuilt verifier image or use an explicitly documented shared-verifier
-compatibility fixture. RetreatBench must not silently replace the official
-verifier with a host process.
+official `tests/Dockerfile` remains the source of truth and installs
+`texlive-full` *inside* the verifier image, together with pytest, PyYAML, and
+the other checker dependencies. The first image build is intentionally large;
+Harbor's content-addressed Docker cache then reuses the TeX layer for later
+tasks. Do not mount the host TeX tree or replace the verifier with a host
+process.
+
+The Ubuntu release gate was exercised with Harbor's native separate verifier
+on five existing tasks (`pwb-0001` through `pwb-0005`), `codex` and
+`gpt-5.6-terra`. All five verifier runs passed (three tests each), all five
+performer trajectories were captured, and the `AvoidanceExportBoth` plugin
+uploaded both sanitized trails. The immutable Trials revision produced by
+that run is recorded in the E2E release notes and can be checked with
+`hf repo-files` or the Hub API.

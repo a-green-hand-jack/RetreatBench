@@ -81,6 +81,9 @@ Linux task/verifier 是 Docker 隔离环境，不会自动读取主机上的 TeX
 verifier 的隔离语义保持不变；E2E 应使用缓存或预构建的 verifier image，不能
 静默改成主机进程。
 
+五任务 Ubuntu E2E 的实际运行记录见
+[`docs/e2e-release-2026-09-04.md`](docs/e2e-release-2026-09-04.md)。
+
 ```bash
 retreatbench show-result <path>/behavior_result.json
 ```
