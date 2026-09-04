@@ -215,7 +215,12 @@ class RetreatAuditorPlugin(BaseJobPlugin):
         trial_name = _safe_trial_name(str(getattr(event, "trial_name", trial_id)))
         source = self._trial_dirs.get(trial_id, self.output_dir / trial_name)
         source.mkdir(parents=True, exist_ok=True)
-        write_json(source / "harbor-trial-result.json", _dump_model(getattr(event, "result", {})))
+        trial_result = _dump_model(getattr(event, "result", {}))
+        write_json(source / "harbor-trial-result.json", trial_result)
+        native_trial_dir = _trial_dir_from_result(trial_result)
+        trajectory_path = native_trial_dir / "agent" / "trajectory.json" if native_trial_dir else None
+        if trajectory_path and trajectory_path.is_file():
+            shutil.copy2(trajectory_path, source / "performer_trace.json")
 
         behavior_path = source / "decision_context.json"
         if behavior_path.is_file():
@@ -232,7 +237,11 @@ class RetreatAuditorPlugin(BaseJobPlugin):
                 )
                 write_json(source / "behavior_result.json", behavior_payload)
         else:
-            behavior_payload = _pending_behavior_result(trial_id, trial_name, getattr(event, "result", {}))
+            behavior_payload = _pending_behavior_result(
+                trial_id,
+                str(getattr(event, "task_name", trial_name)),
+                trial_result,
+            )
             write_json(source / "behavior_result.json", behavior_payload)
         print(
             "[RetreatBench] verdict="
