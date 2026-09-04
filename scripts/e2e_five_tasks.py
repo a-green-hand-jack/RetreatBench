@@ -2,9 +2,9 @@
 """Run the five-task RetreatBench Harbor E2E gate.
 
 The task dataset is the source of truth: this script never synthesizes or
-duplicates tasks.  It freezes the first five task directories in lexical task
-ID order into a manifest so a release can be reproduced against the same Hub
-revision.
+duplicates tasks. It freezes the five published ``pwb-0001`` through
+``pwb-0005`` task directories into a manifest so a release can be reproduced
+against the same Hub revision.
 """
 
 from __future__ import annotations
@@ -15,6 +15,8 @@ import subprocess
 from pathlib import Path
 
 from retreatbench.e2e import discover_tasks, tasks_from_manifest
+
+E2E_TASK_IDS = tuple(f"pwb-{index:04d}" for index in range(1, 6))
 
 
 def main() -> int:
@@ -36,9 +38,11 @@ def main() -> int:
         if args.task_manifest
         else discover_tasks(args.dataset_root)
     )
-    if len(discovered) < 5:
-        parser.error(f"dataset contains {len(discovered)} tasks; five are required")
-    selected = discovered[:5]
+    by_basename = {Path(task_id).name: (task_id, path) for task_id, path in discovered}
+    missing = [task_id for task_id in E2E_TASK_IDS if task_id not in by_basename]
+    if missing:
+        parser.error("dataset is missing fixed E2E tasks: " + ", ".join(missing))
+    selected = [by_basename[task_id] for task_id in E2E_TASK_IDS]
     repo_path = args.repo_path or str(selected[0][1].relative_to(args.dataset_root).parts[0])
     harbor_task_ids = [Path(task_id).name for task_id, _ in selected]
     args.jobs_dir.mkdir(parents=True, exist_ok=True)
@@ -47,7 +51,7 @@ def main() -> int:
         "dataset_repo": args.repo,
         "agent": "codex",
         "model": "gpt-5.6-terra",
-        "plugin": "retreatbench.harbor_plugins:AvoidanceExportBoth",
+        "plugin": "retreatbench.harbor_plugins:RecorderExportBoth",
         "tasks": [
             {"task_id": harbor_id, "path": str(path), "dataset_path": task_id}
             for (task_id, path), harbor_id in zip(selected, harbor_task_ids, strict=True)
@@ -72,7 +76,7 @@ def main() -> int:
             "gpt-5.6-terra",
             "--resume-trajectory",
             "--plugin",
-            "retreatbench.harbor_plugins:AvoidanceExportBoth",
+            "retreatbench.harbor_plugins:RecorderExportBoth",
             "--yes",
             "--n-concurrent",
             "1",

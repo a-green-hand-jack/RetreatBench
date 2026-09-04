@@ -1,5 +1,5 @@
 benchmark: researchclawbench
-status: adapted
+status: needs-adapter
 
 upstream:
   repo: InternScience/ResearchClawBench

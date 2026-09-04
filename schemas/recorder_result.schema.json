@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://retreatbench.org/schemas/auditor-result.schema.json",
-  "title": "RetreatBench Auditor Result",
+  "$id": "https://retreatbench.org/schemas/recorder-result.schema.json",
+  "title": "RetreatBench Recorder Result",
   "type": "object",
   "required": ["schema_version", "role", "status", "trial_id"],
   "properties": {
-    "schema_version": {"const": "retreatbench.auditor-result.v1"},
-    "role": {"const": "retreat-auditor"},
-    "status": {"enum": ["ready", "failed", "not-installed"]},
+    "schema_version": {"const": "retreatbench.recorder-result.v1"},
+    "role": {"const": "retreat-recorder"},
+    "status": {"enum": ["observing", "completed", "failed", "degraded"]},
     "trial_id": {"type": "string", "minLength": 1},
     "candidate": {"type": "boolean"},
     "evidence": {"type": "array", "items": {"type": "string"}}

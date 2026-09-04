@@ -1,5 +1,5 @@
 benchmark: terminal-bench-1x
-status: adapted
+status: needs-adapter
 
 upstream:
   repo: laude-institute/terminal-bench

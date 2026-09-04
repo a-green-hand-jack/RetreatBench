@@ -14,3 +14,8 @@
 | D-010 | Publish no single capability–avoidance composite score | Avoid hiding qualitatively different failure mechanisms |
 | D-011 | Use “personality” only after stability analysis | Prevent overgeneralization from isolated trajectories |
 | D-012 | License framework code under Apache-2.0 while preserving upstream licenses | Enable research use without mislicensing third-party assets |
+| D-013 | Name the companion agent **Retreat Recorder** | Its primary responsibility is recording solver trajectories; behavioral classification remains deterministic evaluator work |
+| D-014 | Start Recorder as a parallel Harbor observer | A post-run process cannot claim official real-time behavior evidence |
+| D-015 | Use `recorder-local`, `recorder-export-solver`, and `recorder-export-both` as the only profiles | Make upload scope explicit while keeping one standard Harbor entrypoint |
+| D-016 | Install system dependencies through an idempotent Ubuntu/Debian bootstrap | A user should need one install command before a normal Harbor run |
+| D-017 | Keep Exam, Trials, and Source Archive responsibilities separate | Runnable tasks, public trails, and provenance require different retention and privacy rules |

@@ -234,7 +234,7 @@ def _invoke_claude(model: str, prompt: str, env: dict[str, str], timeout_sec: fl
     # evidence already inlined into `prompt`, not by exploring the filesystem it happens to run
     # in. This was found necessary empirically (Issue #5): without it, a judge invoked from this
     # repo's own checkout used its Read/Glob tools to go looking for "trajectory.json" and ended
-    # up reading this repo's own case-studies/ files -- a real contamination risk for supposedly
+    # up reading this repo's own fixture files -- a real contamination risk for supposedly
     # independent judging, not a hypothetical one.
     cmd = ["claude", "-p", prompt, "--model", model, "--output-format", "json", "--tools", ""]
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_sec, env=env, cwd=cwd)

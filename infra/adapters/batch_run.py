@@ -16,7 +16,7 @@ Per (benchmark, task_id):
      validates that the CONVERSION's build+agent+verify machinery works
      end to end, not that the subject agent actually solved the task (this
      is the same "candidate detectors don't establish capability" stance
-     the rest of the project takes -- see docs/benchmark-hub.md). If no
+     the rest of the project takes -- see docs/benchmark-building.md). If no
      reward file was produced and the recorded exception looks
      credential/balance-related, retry once with OpenAI OAuth (the codex
      agent + CODEX_AUTH_JSON_PATH, matching

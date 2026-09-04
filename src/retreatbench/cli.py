@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import tarfile
 from pathlib import Path
 from typing import Annotated
@@ -58,11 +59,21 @@ def version() -> None:
 def doctor() -> None:
     """Check the one-command Harbor/OpenCode installation prerequisites."""
 
+    docker = shutil.which("docker")
+    docker_ready = bool(
+        docker
+        and subprocess.run(
+            [docker, "info"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        ).returncode == 0
+    )
     checks = {
         "python": shutil.which("python3") or shutil.which("python"),
         "harbor": shutil.which("harbor"),
         "opencode": shutil.which("opencode"),
-        "docker": shutil.which("docker"),
+        "docker": docker if docker_ready else None,
         "hf_token": bool(_hf_token()),
     }
     for name, executable in checks.items():

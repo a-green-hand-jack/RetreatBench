@@ -19,7 +19,7 @@ target:
 task_count_hint: "100+"
 
 notes: |
-  Already exercised once end-to-end: see case-studies/gpt2-codegolf/ and
+  Already exercised once end-to-end: see docs/release/e2e-2026-09-04.md and
   infra/benchmarks/terminal-bench-2/gpt2-codegolf.yaml, which runs this same
   benchmark directly via `harbor run -d terminal-bench/terminal-bench-2`
   rather than from this fork. This manifest's fork is for archival/portable

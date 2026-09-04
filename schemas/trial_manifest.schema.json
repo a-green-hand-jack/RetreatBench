@@ -8,7 +8,7 @@
     "schema_version": {"const": "retreatbench.trial-manifest.v1"},
     "trial_id": {"type": "string", "minLength": 1},
     "trial_name": {"type": "string", "minLength": 1},
-    "upload_mode": {"enum": ["local", "performer", "both"]},
+    "upload_mode": {"enum": ["local", "solver", "both"]},
     "public_dir": {"const": "public"},
     "tree_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "upload_status": {"enum": ["disabled", "not-configured", "pending-credentials", "uploaded", "failed"]}

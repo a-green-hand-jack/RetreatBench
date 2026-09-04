@@ -45,9 +45,9 @@ dev = [
 retreatbench = "retreatbench.cli:app"
 
 [project.entry-points."harbor.plugins"]
-avoidance-local = "retreatbench.harbor_plugins:AvoidanceLocal"
-avoidance-export-performer = "retreatbench.harbor_plugins:AvoidanceExportPerformer"
-avoidance-export-both = "retreatbench.harbor_plugins:AvoidanceExportBoth"
+recorder-local = "retreatbench.harbor_plugins:RecorderLocal"
+recorder-export-solver = "retreatbench.harbor_plugins:RecorderExportSolver"
+recorder-export-both = "retreatbench.harbor_plugins:RecorderExportBoth"
 
 [project.urls]
 Homepage = "https://github.com/a-green-hand-jack/RetreatBench"
