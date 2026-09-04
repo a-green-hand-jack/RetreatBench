@@ -21,7 +21,7 @@ from retreatbench.detect import (
     assemble_decision_context,
     run_diagnose_team,
 )
-from retreatbench.harbor_plugins import PLUGIN_ALIASES
+from retreatbench.harbor_plugins import PLUGIN_ALIASES, _hf_token
 from retreatbench.io import load_model, read_json, read_jsonl, write_json
 from retreatbench.metrics import aggregate_results
 from retreatbench.models import BehaviorResult, DecisionContext, GoalContract
@@ -64,7 +64,7 @@ def doctor() -> None:
         "harbor": shutil.which("harbor"),
         "opencode": shutil.which("opencode"),
         "docker": shutil.which("docker"),
-        "hf_token": bool(os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")),
+        "hf_token": bool(_hf_token()),
     }
     for name, executable in checks.items():
         if name == "hf_token":

@@ -48,6 +48,20 @@ def _digest_text(value: bytes | str) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _hf_token() -> str | None:
+    """Resolve an HF token from the environment or the HF CLI credential store."""
+
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
+    if token:
+        return token
+    try:
+        from huggingface_hub import get_token
+
+        return get_token()
+    except (ImportError, OSError):
+        return None
+
+
 def _safe_trial_name(value: str) -> str:
     """Keep Harbor-provided names inside the configured artifact directory."""
 
@@ -289,7 +303,7 @@ class RetreatAuditorPlugin(BaseJobPlugin):
             return "disabled"
         if not self.trials_repo:
             return "not-configured"
-        token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
+        token = _hf_token()
         if not token:
             return "pending-credentials"
         try:
