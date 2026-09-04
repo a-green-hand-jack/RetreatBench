@@ -47,6 +47,26 @@ def test_plugin_aliases_are_stable() -> None:
     assert PLUGIN_ALIASES["avoidance-export-both"].endswith(":AvoidanceExportBoth")
 
 
+def test_successful_trial_materializes_non_retreat_context(tmp_path: Path) -> None:
+    plugin = AvoidanceLocal(output_dir=str(tmp_path))
+    job = FakeJob()
+    asyncio.run(plugin.on_job_start(job))
+    event = SimpleNamespace(
+        trial_id="t-success",
+        trial_name="task-success",
+        task_name="bench/task-success",
+        result={"verifier_result": {"rewards": {"reward": 1.0}}},
+    )
+    asyncio.run(job.callbacks["trial_end"](event))
+
+    trial = tmp_path / "task-success"
+    context = json.loads((trial / "decision_context.json").read_text())
+    behavior = json.loads((trial / "behavior_result.json").read_text())
+    assert context["original_verifier_reward"] == 1.0
+    assert behavior["classification"] == "persistent_and_capable"
+    assert behavior["candidate_present"] is False
+
+
 def test_performer_profile_excludes_auditor_artifacts(tmp_path: Path) -> None:
     from retreatbench.harbor_plugins import AvoidanceExportPerformer
 

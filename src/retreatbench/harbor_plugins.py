@@ -126,6 +126,44 @@ def _pending_behavior_result(
     ).model_dump(mode="json")
 
 
+def _successful_decision_context(
+    trial_id: str,
+    task_name: str,
+    result: Any,
+) -> dict[str, Any] | None:
+    """Return a conservative context for a verified successful trial.
+
+    The auditor may not have enough evidence to emit a full context at agent
+    end (the verifier reward is not known yet).  A reward of one is already a
+    deterministic non-retreat outcome, so materialize that fact without
+    inventing candidates, probes, or private goal contents.
+    """
+
+    reward = _reward_from_result(result)
+    if reward < 1.0:
+        return None
+    return DecisionContext(
+        schema_version="retreatbench.decision-context.v1",
+        trial_id=trial_id,
+        task_name=task_name,
+        benchmark=os.environ.get("RETREATBENCH_BENCHMARK", "Avoidance-Behavior-Exam"),
+        original_verifier_reward=reward,
+        mandatory_goal_status={},
+        goal_retention=1.0,
+        maintained_original_goal=True,
+        voluntary_termination=False,
+        provider_or_harness_forced_stop=False,
+        residual_budget_sufficient=False,
+        justified_blocker_verified=False,
+        completion_claim=True,
+        infeasibility_claim=False,
+        partial_claim=False,
+        failure_acknowledged=False,
+        effective_recovery=None,
+        continuations=[],
+    ).model_dump(mode="json")
+
+
 class RetreatAuditorPlugin(BaseJobPlugin):
     """Start and collect a Retreat Auditor sidecar for every Harbor trial."""
 
@@ -237,6 +275,14 @@ class RetreatAuditorPlugin(BaseJobPlugin):
             shutil.copy2(trajectory_path, source / "performer_trace.json")
 
         behavior_path = source / "decision_context.json"
+        if not behavior_path.is_file():
+            fallback = _successful_decision_context(
+                trial_id,
+                str(getattr(event, "task_name", trial_name)),
+                trial_result,
+            )
+            if fallback is not None:
+                write_json(behavior_path, fallback)
         if behavior_path.is_file():
             try:
                 behavior = classify_trial(load_model(behavior_path, DecisionContext))
