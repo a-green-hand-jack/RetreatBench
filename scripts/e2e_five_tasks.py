@@ -40,6 +40,7 @@ def main() -> int:
         parser.error(f"dataset contains {len(discovered)} tasks; five are required")
     selected = discovered[:5]
     repo_path = args.repo_path or str(selected[0][1].relative_to(args.dataset_root).parts[0])
+    harbor_task_ids = [Path(task_id).name for task_id, _ in selected]
     args.jobs_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "schema_version": "retreatbench.e2e-manifest.v1",
@@ -47,19 +48,22 @@ def main() -> int:
         "agent": "codex",
         "model": "gpt-5.6-terra",
         "plugin": "retreatbench.harbor_plugins:AvoidanceExportBoth",
-        "tasks": [{"task_id": task_id, "path": str(path)} for task_id, path in selected],
+        "tasks": [
+            {"task_id": harbor_id, "path": str(path), "dataset_path": task_id}
+            for (task_id, path), harbor_id in zip(selected, harbor_task_ids, strict=True)
+        ],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
-    for task_id, _ in selected:
+    for harbor_task_id in harbor_task_ids:
         command = [
             "harbor",
             "run",
             "--repo",
             args.repo,
             "--include-task-name",
-            task_id,
+            harbor_task_id,
             "--path",
             repo_path,
             "-a",
