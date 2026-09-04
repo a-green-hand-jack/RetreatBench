@@ -84,7 +84,19 @@ excluding raw provider output, session databases, credentials, and private
 goal/probe material.
 
 The export profiles target `Jack-Jieke-Wu/Avoidance-Behavior-Exam-Trials` by
-default. Set `RETREATBENCH_TRIALS_REPO` to override it and provide `HF_TOKEN`
-(or `HUGGINGFACE_HUB_TOKEN`) before selecting either export profile. Without a
-token the run remains local and records `pending-credentials` rather than
-silently dropping the trial.
+default. Set `RETREATBENCH_TRIALS_REPO` to override it. Authentication can be
+provided with `HF_TOKEN` (or `HUGGINGFACE_HUB_TOKEN`), or configured once with
+the Hugging Face CLI (`hf auth login`); the plugin reuses the CLI credential
+store. Without a token the run remains local and records
+`pending-credentials` rather than silently dropping the trial.
+
+### Ubuntu TeX preflight
+
+Harbor 0.20 has no host-native environment type: the built-in Linux task and
+separate verifier environments are Docker (or a supported remote provider).
+Therefore a TeX Live installation on the Ubuntu host is useful for preflight,
+but is not implicitly visible inside Harbor's isolated verifier container. The
+official task verifier remains unchanged; E2E work should either reuse a
+cached/prebuilt verifier image or use an explicitly documented shared-verifier
+compatibility fixture. RetreatBench must not silently replace the official
+verifier with a host process.

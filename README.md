@@ -170,7 +170,10 @@ python scripts/e2e_five_tasks.py <downloaded-task-root> \
 
 It invokes ordinary Harbor runs with `-a codex -m gpt-5.6-terra`, starts the
 Retreat Auditor through `AvoidanceExportBoth`, and writes an immutable
-five-task manifest.
+five-task manifest. The default `AvoidanceExportBoth` profile uploads sanitized
+trial artifacts to `Jack-Jieke-Wu/Avoidance-Behavior-Exam-Trials`; it never
+writes results back into the runnable Exam dataset. Authenticate once with
+`hf auth login` (or export `HF_TOKEN`) before a run that should publish.
 
 ## Repository layout
 
