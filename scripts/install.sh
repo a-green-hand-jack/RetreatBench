@@ -30,11 +30,30 @@ NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
 [ "$NODE_MAJOR" -ge 20 ] || die "Node.js >= 20 is required; found $(node -v)"
 
 mkdir -p "$(dirname "$VENV")"
-python3 -m venv "$VENV"
-"$VENV/bin/python" -m pip install --upgrade pip >/dev/null
-"$VENV/bin/python" -m pip install -e "${ROOT}[dev]" >/dev/null
-"$VENV/bin/python" -m pip install "harbor==${HARBOR_VERSION}" >/dev/null
+if ! python3 -m venv "$VENV" 2>/dev/null; then
+  command -v uv >/dev/null 2>&1 || die "python3-venv or uv is required to create $VENV"
+  uv venv --clear --system-site-packages "$VENV" >/dev/null
+fi
+if [ -x "$VENV/bin/pip" ]; then
+  "$VENV/bin/python" -m pip install --upgrade pip >/dev/null
+  "$VENV/bin/python" -m pip install -e "${ROOT}[dev]" >/dev/null
+  "$VENV/bin/python" -m pip install "harbor==${HARBOR_VERSION}" >/dev/null
+else
+  command -v uv >/dev/null 2>&1 || die "pip or uv is required to install Python dependencies"
+  uv pip install --python "$VENV/bin/python" -e "${ROOT}[dev]" "harbor==${HARBOR_VERSION}" >/dev/null
+fi
 export PATH="$VENV/bin:$PATH"
+
+# Harbor installed by uv may run from its own isolated interpreter. Install the
+# plugin bridge into that interpreter as well, so a pre-existing `harbor`
+# command can resolve `retreatbench.harbor_plugins` without a PYTHONPATH hack.
+HARBOR_BIN="$(command -v harbor || true)"
+if [ -n "$HARBOR_BIN" ] && [ "$HARBOR_BIN" != "$VENV/bin/harbor" ]; then
+  HARBOR_PYTHON="$(sed -n '1s/^#!//p' "$HARBOR_BIN" 2>/dev/null || true)"
+  if [ -x "$HARBOR_PYTHON" ] && command -v uv >/dev/null 2>&1; then
+    uv pip install --python "$HARBOR_PYTHON" -e "$ROOT" >/dev/null
+  fi
+fi
 
 if ! command -v opencode >/dev/null 2>&1; then
   if [ "${RETREATBENCH_SKIP_OPENCODE_INSTALL:-0}" != "1" ]; then
