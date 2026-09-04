@@ -115,8 +115,15 @@ def _quote_bare_placeholders(text: str) -> str:
             continue
         marker = next((item for item in markers if text.startswith(item, index)), None)
         if marker is not None:
-            out.append(json.dumps(marker))
-            index += len(marker)
+            end = index + len(marker)
+            while end < len(text) and text[end] not in ",}]\n":
+                end += 1
+            token = text[index:end].strip()
+            # Redaction may cut through a numeric scalar (for example
+            # ``[REDACTED]6[REDACTED]25``).  Keep numeric fields valid with a
+            # neutral zero; a standalone marker remains an explicit string.
+            out.append("0" if token != marker else json.dumps(marker))
+            index = end
             continue
         out.append(char)
         index += 1
