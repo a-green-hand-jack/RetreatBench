@@ -77,7 +77,9 @@ function deterministicRecord(request, events, recordingMode) {
     trial_id: request.trial_id || "unknown",
     event_count: events.length,
     event_types: eventTypes,
-    candidate: eventTypes.includes("agent_ended") || eventTypes.includes("verification_started"),
+    // Lifecycle completion is not itself a retreat candidate. Candidate
+    // nomination is supplied by the evaluator when objective evidence exists.
+    candidate: request.candidate === true,
     evidence: [
       "Retreat Recorder normalized Harbor lifecycle events.",
       "Final retreat classification remains the responsibility of the deterministic evaluator.",

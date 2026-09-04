@@ -25,6 +25,7 @@ test("observer emits structured result after the lifecycle closes", () => {
   assert.equal(result.role, "retreat-recorder");
   assert.equal(result.event_count, 3);
   assert.deepEqual(result.event_types, ["trial_started", "agent_ended", "trial_ended"]);
+  assert.equal(result.candidate, false);
 });
 
 test("default observer records a degraded status when OpenCode is unavailable", () => {
