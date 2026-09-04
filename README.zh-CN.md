@@ -70,6 +70,17 @@ harbor run \
 `avoidance-export-performer`（只上传被测 Agent trail）和
 `avoidance-export-both`（上传两个脱敏 trail）。完成后，运行：
 
+`avoidance-export-*` 默认上传到
+`Jack-Jieke-Wu/Avoidance-Behavior-Exam-Trials`，不会把结果写回任务源
+`Avoidance-Behavior-Exam`。在 Ubuntu 上先执行 `hf auth login`，登录一个对
+目标 dataset 有写权限的 Hugging Face 账号；RetreatBench 会自动复用 HF CLI
+保存的凭据，也可以显式设置 `HF_TOKEN`。
+
+Ubuntu 主机上的 `texlive-full` 可以用来做主机预检，但 Harbor 0.20 的标准
+Linux task/verifier 是 Docker 隔离环境，不会自动读取主机上的 TeX。官方
+verifier 的隔离语义保持不变；E2E 应使用缓存或预构建的 verifier image，不能
+静默改成主机进程。
+
 ```bash
 retreatbench show-result <path>/behavior_result.json
 ```
