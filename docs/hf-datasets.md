@@ -39,7 +39,9 @@ runnable task files or trial trajectories.
 `scripts/build_source_archive.py` turns a reviewed JSONL source-record file into
 the archive manifest. The resulting JSON can be uploaded to
 `Jack-Jieke-Wu/Avoidance-Behavior-Exam-Source-Archive` without copying task or
-trial payloads.
+trial payloads. The public dataset card is maintained in
+`docs/source-archive-dataset-card.md`; the current release is a provenance
+document for the Harbor-style task set and does not duplicate task files.
 
 ## Release rule
 
