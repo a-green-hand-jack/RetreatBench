@@ -250,7 +250,7 @@ def sanitize_tree(source: str | Path, destination: str | Path) -> SanitizationRe
                         "source_sha256": hashlib.sha256(raw_json.encode("utf-8")).hexdigest(),
                     }
                 target.write_text(
-                    json.dumps(sanitize_value(payload, report), indent=2, ensure_ascii=False) + "\n",
+                    json.dumps(sanitize_value(payload, report), indent=2, ensure_ascii=True) + "\n",
                     encoding="utf-8",
                 )
             elif path.suffix.lower() in {".jsonl", ".ndjson"}:
@@ -259,7 +259,7 @@ def sanitize_tree(source: str | Path, destination: str | Path) -> SanitizationRe
                     if not line.strip():
                         continue
                     try:
-                        lines.append(json.dumps(sanitize_value(json.loads(line), report), ensure_ascii=False))
+                        lines.append(json.dumps(sanitize_value(json.loads(line), report), ensure_ascii=True))
                     except json.JSONDecodeError:
                         lines.append(_redact_text(line, report))
                 target.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
