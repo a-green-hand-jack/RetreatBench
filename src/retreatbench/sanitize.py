@@ -71,6 +71,26 @@ def _redact_text(value: str, report: SanitizationReport) -> str:
     return result
 
 
+def _load_json_for_sanitization(text: str) -> Any:
+    """Load JSON while repairing Harbor's bare redaction placeholders.
+
+    Some Harbor providers redact scalar values before writing ATIF, yielding
+    entries such as ``"step_id": [REDACTED]``.  The source is still useful,
+    but not technically JSON.  Quoting only standalone placeholders preserves
+    the normalized record and keeps the public copy parseable.
+    """
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        repaired = re.sub(
+            r'(?<!["\w])\[(?:REDACTED|PRIVATE_FIELD_REMOVED)\](?!["\w])',
+            lambda match: json.dumps(match.group(0)),
+            text,
+        )
+        return json.loads(repaired)
+
+
 def sanitize_value(value: Any, report: SanitizationReport, key: str | None = None) -> Any:
     """Recursively remove private fields and redact secrets in JSON values."""
 
@@ -129,7 +149,7 @@ def sanitize_tree(source: str | Path, destination: str | Path) -> SanitizationRe
         target.parent.mkdir(parents=True, exist_ok=True)
         try:
             if path.suffix.lower() == ".json":
-                payload = json.loads(path.read_text(encoding="utf-8"))
+                payload = _load_json_for_sanitization(path.read_text(encoding="utf-8"))
                 target.write_text(
                     json.dumps(sanitize_value(payload, report), indent=2, ensure_ascii=False) + "\n",
                     encoding="utf-8",

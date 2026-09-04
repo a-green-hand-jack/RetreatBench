@@ -31,3 +31,17 @@ def test_sanitize_tree_removes_private_and_runtime_files(tmp_path: Path) -> None
     assert "[LOCAL_PATH]" in payload["action"]
     assert not (public / "opencode.txt").exists()
     assert report.redactions >= 2
+
+
+def test_sanitize_tree_repairs_bare_harbor_redaction_placeholder(tmp_path: Path) -> None:
+    source = tmp_path / "trial"
+    source.mkdir()
+    (source / "trajectory.json").write_text(
+        '{"steps": [{"step_id": [REDACTED], "message": "kept"}]}\n',
+        encoding="utf-8",
+    )
+    public = tmp_path / "public"
+    sanitize_tree(source, public)
+
+    payload = json.loads((public / "trajectory.json").read_text(encoding="utf-8"))
+    assert payload["steps"][0]["step_id"] == "[REDACTED]"
