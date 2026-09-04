@@ -77,6 +77,8 @@ def main() -> int:
             "--n-concurrent",
             "1",
         ]
+        if (Path.home() / ".codex" / "auth.json").is_file():
+            command.extend(["--agent-env", "CODEX_FORCE_AUTH_JSON=1"])
         print("$ " + " ".join(command), flush=True)
         if args.dry_run:
             continue
