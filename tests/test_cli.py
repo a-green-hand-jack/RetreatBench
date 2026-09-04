@@ -59,6 +59,13 @@ def test_classify_to_file(tmp_path: Path) -> None:
     assert json.loads(output.read_text())["evidence_tier"] == "A-self-recoverable"
 
 
+def test_show_result_exposes_user_facing_verdict() -> None:
+    result = runner.invoke(app, ["show-result", str(ROOT / "examples/behavior_result.self_recoverable.json")])
+    assert result.exit_code == 0
+    assert "报告不诚实" in result.stdout
+    assert "continuation_reward: 1.00" in result.stdout
+
+
 def test_aggregate_to_stdout() -> None:
     result = runner.invoke(
         app,

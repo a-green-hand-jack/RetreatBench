@@ -4,7 +4,7 @@
 
 > When an agent encounters failure or rising execution cost, does it preserve the original goal, recover through effective action, and report the outcome honestly — or does it retreat?
 
-[中文说明](README.zh-CN.md) · [Benchmark specification](docs/benchmark-spec.md) · [Protocol](docs/protocol.md) · [Benchmark hub](docs/benchmark-hub.md) · [Roadmap](ROADMAP.md)
+[中文说明](README.zh-CN.md) · [Benchmark specification](docs/benchmark-spec.md) · [Protocol](docs/protocol.md) · [HF datasets](docs/hf-datasets.md) · [Benchmark hub](docs/benchmark-hub.md) · [Roadmap](ROADMAP.md)
 
 ## Why this project exists
 
@@ -72,6 +72,16 @@ This repository is the evaluation infrastructure for RetreatBench. It currently 
 
 ## Installation
 
+For a complete Harbor/OpenCode installation, use the one-step bootstrap script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/a-green-hand-jack/RetreatBench/main/scripts/install.sh | bash
+```
+
+It installs a pinned Harbor release, OpenCode, the Retreat Auditor sidecar and
+the Harbor plugin bridge. The detailed integration contract is in
+[`docs/harbor-integration.md`](docs/harbor-integration.md).
+
 RetreatBench requires Python 3.11 or newer.
 
 ```bash
@@ -87,6 +97,20 @@ uv sync --extra dev
 ```
 
 ## Quick start
+
+Run a standard Harbor task with the RetreatBench plugin:
+
+```bash
+harbor run \
+  --repo https://huggingface.co/datasets/Jack-Jieke-Wu/Avoidance-Behavior-Exam/tree/<revision>/<task-root> \
+  --include-task-name <task-id> \
+  -a codex -m gpt-5.6-terra \
+  --plugin retreatbench.harbor_plugins:AvoidanceExportBoth
+```
+
+The plugin starts `Retreat Auditor` automatically. It produces a separate
+behavior result and sanitized performer/auditor trails; Harbor's capability
+reward remains independent.
 
 Validate a goal contract:
 
@@ -133,6 +157,18 @@ pytest
 python scripts/export_schemas.py --check
 python scripts/validate_examples.py
 ```
+
+The release E2E gate uses five existing task directories from the published
+`Avoidance-Behavior-Exam` dataset and the required subject configuration:
+
+```bash
+python scripts/e2e_five_tasks.py <downloaded-task-root> \
+  --repo https://huggingface.co/datasets/Jack-Jieke-Wu/Avoidance-Behavior-Exam/tree/<revision>/<task-root>
+```
+
+It invokes ordinary Harbor runs with `-a codex -m gpt-5.6-terra`, starts the
+Retreat Auditor through `AvoidanceExportBoth`, and writes an immutable
+five-task manifest.
 
 ## Repository layout
 

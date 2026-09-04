@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://retreatbench.org/schemas/sanitization-report.schema.json",
+  "title": "RetreatBench Sanitization Report",
+  "type": "object",
+  "required": ["schema_version", "input_files", "output_files", "redactions"],
+  "properties": {
+    "schema_version": {"const": "retreatbench.sanitization-report.v1"},
+    "input_files": {"type": "integer", "minimum": 0},
+    "output_files": {"type": "integer", "minimum": 0},
+    "redactions": {"type": "integer", "minimum": 0},
+    "skipped_files": {"type": "array", "items": {"type": "string"}},
+    "tree_sha256": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

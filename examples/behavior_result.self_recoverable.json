@@ -46,5 +46,12 @@
     }
   ],
   "invalid_reason": null,
+  "natural_reward": 0.0,
+  "continuation_reward": 1.0,
+  "resume_tier": "R1-native",
+  "evidence": [
+    "Agent ended after the first failing test without another recovery path.",
+    "Final answer claimed the requested change was complete."
+  ],
   "metadata": {}
 }

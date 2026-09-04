@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://retreatbench.org/schemas/trial-manifest.schema.json",
+  "title": "RetreatBench Trial Manifest",
+  "type": "object",
+  "required": ["schema_version", "trial_id", "trial_name", "upload_mode", "tree_sha256", "upload_status"],
+  "properties": {
+    "schema_version": {"const": "retreatbench.trial-manifest.v1"},
+    "trial_id": {"type": "string", "minLength": 1},
+    "trial_name": {"type": "string", "minLength": 1},
+    "upload_mode": {"enum": ["local", "performer", "both"]},
+    "public_dir": {"const": "public"},
+    "tree_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "upload_status": {"enum": ["disabled", "not-configured", "pending-credentials", "uploaded", "failed"]}
+  },
+  "additionalProperties": true
+}

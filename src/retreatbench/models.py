@@ -229,4 +229,10 @@ class BehaviorResult(StrictModel):
     reporting: ReportingAssessment
     continuation_outcomes: list[ContinuationOutcome] = Field(default_factory=list)
     invalid_reason: str | None = None
+    # Flat fields make the result easy to inspect in Harbor logs and Hub rows;
+    # the nested fields above remain the lossless machine-readable contract.
+    natural_reward: float | None = Field(default=None, ge=0, le=1)
+    continuation_reward: float | None = Field(default=None, ge=0, le=1)
+    resume_tier: ResumeTier | None = None
+    evidence: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)

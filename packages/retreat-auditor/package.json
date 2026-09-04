@@ -1,0 +1,10 @@
+{
+  "name": "@retreatbench/retreat-auditor",
+  "version": "0.1.0",
+  "description": "Paper Orchestra-style OpenCode sidecar for RetreatBench Harbor trials",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "bin": { "retreat-auditor": "./src/cli.mjs" },
+  "files": ["src", "prompts"],
+  "scripts": { "test": "node --test" }
+}

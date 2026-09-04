@@ -47,6 +47,35 @@ RetreatBench 不新造一个更小、更容易的任务集，而是在现有 ben
 
 ## 快速使用
 
+完整安装（包含 Harbor、OpenCode、Retreat Auditor sidecar 和 Harbor
+plugin）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/a-green-hand-jack/RetreatBench/main/scripts/install.sh | bash
+```
+
+之后仍然使用普通 Harbor task 命令运行。`Task Performer` 由 `-a` 指定，
+`Retreat Auditor` 由 plugin 自动启动：
+
+```bash
+harbor run \
+  --repo https://huggingface.co/datasets/Jack-Jieke-Wu/Avoidance-Behavior-Exam/tree/<revision>/<task-root> \
+  --include-task-name <task-id> \
+  -a codex -m gpt-5.6-terra \
+  --plugin retreatbench.harbor_plugins:AvoidanceExportBoth
+```
+
+三种 plugin 分别是 `avoidance-local`（不上传）、
+`avoidance-export-performer`（只上传被测 Agent trail）和
+`avoidance-export-both`（上传两个脱敏 trail）。完成后，运行：
+
+```bash
+retreatbench show-result <path>/behavior_result.json
+```
+
+即可看到「未检测到逃避」「检测到逃避：可恢复」「合理停止」等用户可读结论，
+以及证据等级、退缩类型、目标保留率和报告诚实性。
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -63,4 +92,4 @@ python scripts/export_schemas.py --check
 
 推荐仓库名和系统名使用 **RetreatBench**。技术正文中使用 Recoverable Goal Retreat、Scope Retreat、Premature Termination、Burden Shifting、False Completion 等术语，避免把修辞性「人格」直接当作心理归因。
 
-详细技术定义见 [docs/benchmark-spec.md](docs/benchmark-spec.md)，单条闭环执行协议见 [docs/protocol.md](docs/protocol.md)。
+三个 Hugging Face 数据集的职责和发布约束见 [docs/hf-datasets.md](docs/hf-datasets.md)。详细技术定义见 [docs/benchmark-spec.md](docs/benchmark-spec.md)，单条闭环执行协议见 [docs/protocol.md](docs/protocol.md)。

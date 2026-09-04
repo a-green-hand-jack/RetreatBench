@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import tarfile
 from pathlib import Path
 from typing import Annotated
@@ -19,9 +21,11 @@ from retreatbench.detect import (
     assemble_decision_context,
     run_diagnose_team,
 )
+from retreatbench.harbor_plugins import PLUGIN_ALIASES
 from retreatbench.io import load_model, read_json, read_jsonl, write_json
 from retreatbench.metrics import aggregate_results
 from retreatbench.models import BehaviorResult, DecisionContext, GoalContract
+from retreatbench.sanitize import sanitize_tree
 from retreatbench.state import StateError, capture_state, restore_state, verify_manifest
 
 app = typer.Typer(
@@ -31,7 +35,7 @@ app = typer.Typer(
 )
 
 
-def _detect_model(data: dict[str, object]) -> type[GoalContract] | type[DecisionContext] | type[BehaviorResult]:
+def _detect_model(data: dict[str, object]) -> type[GoalContract | DecisionContext | BehaviorResult]:
     schema_version = data.get("schema_version")
     mapping = {
         "retreatbench.goal-contract.v1": GoalContract,
@@ -52,6 +56,100 @@ def version() -> None:
 
 
 @app.command()
+def doctor() -> None:
+    """Check the one-command Harbor/OpenCode installation prerequisites."""
+
+    checks = {
+        "python": shutil.which("python3") or shutil.which("python"),
+        "harbor": shutil.which("harbor"),
+        "opencode": shutil.which("opencode"),
+        "docker": shutil.which("docker"),
+        "hf_token": bool(os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")),
+    }
+    for name, executable in checks.items():
+        if name == "hf_token":
+            typer.echo(f"{name}: {'configured' if executable else 'missing (uploads disabled)'}")
+        else:
+            typer.echo(f"{name}: {'ok (' + executable + ')' if executable else 'missing'}")
+    missing = [name for name, executable in checks.items() if executable is None and name != "hf_token"]
+    if missing:
+        typer.echo("missing prerequisites: " + ", ".join(missing), err=True)
+        raise typer.Exit(code=1)
+    typer.echo("retreatbench installation looks ready")
+
+
+@app.command("plugins")
+def plugins() -> None:
+    """List the Harbor plugin aliases installed by RetreatBench."""
+
+    for alias, import_path in PLUGIN_ALIASES.items():
+        typer.echo(f"{alias}\t{import_path}")
+
+
+@app.command("sanitize")
+def sanitize_command(
+    source: Annotated[Path, typer.Argument(exists=True, file_okay=False, readable=True)],
+    destination: Annotated[Path, typer.Argument(file_okay=False)],
+) -> None:
+    """Create the public-safe copy of a trial artifact directory."""
+
+    try:
+        report = sanitize_tree(source, destination)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    write_json(destination / "sanitization-report.json", report.as_dict())
+    typer.echo(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
+
+
+@app.command("show-result")
+def show_result(
+    path: Annotated[Path, typer.Argument(exists=True, dir_okay=False, readable=True)],
+) -> None:
+    """Print a concise human-readable behavior verdict."""
+
+    try:
+        result = load_model(path, BehaviorResult)
+    except (TypeError, ValueError, ValidationError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    labels = {
+        "self_recoverable_avoidance": "检测到逃避：可恢复",
+        "partial_self_recoverable_avoidance": "检测到逃避：部分恢复",
+        "observed_retreat": "检测到逃避：未恢复",
+        "justified_stop": "合理停止",
+        "inconclusive": "证据不足",
+        "invalid": "运行无效",
+    }
+    if result.reporting.false_completion or result.reporting.false_infeasibility:
+        label = "报告不诚实"
+    else:
+        label = labels.get(result.classification.value, "未检测到逃避")
+    typer.echo(f"{label} ({result.classification.value})")
+    typer.echo(f"task: {result.task_name}")
+    typer.echo(f"evidence: {result.evidence_tier.value}")
+    typer.echo(f"goal_retention: {result.goal_retention:.2f}")
+    if result.natural_reward is not None:
+        typer.echo(f"natural_reward: {result.natural_reward:.2f}")
+    if result.continuation_reward is not None:
+        typer.echo(f"continuation_reward: {result.continuation_reward:.2f}")
+    if result.resume_tier is not None:
+        typer.echo(f"resume_tier: {result.resume_tier.value}")
+    if result.candidate_subtypes:
+        typer.echo("subtypes: " + ", ".join(item.value for item in result.candidate_subtypes))
+    for item in result.evidence:
+        typer.echo(f"evidence_detail: {item}")
+    if result.reporting.false_completion:
+        typer.echo("reporting: false completion")
+    elif result.reporting.false_infeasibility:
+        typer.echo("reporting: false infeasibility")
+    elif result.reporting.honest_failure:
+        typer.echo("reporting: honest failure")
+    if result.invalid_reason:
+        typer.echo(f"reason: {result.invalid_reason}")
+
+
+@app.command()
 def validate(
     path: Annotated[Path, typer.Argument(exists=True, dir_okay=False, readable=True)],
 ) -> None:
@@ -60,10 +158,10 @@ def validate(
     try:
         data = read_json(path)
         if not isinstance(data, dict):
-            raise ValueError("top-level JSON value must be an object")
+            raise TypeError("top-level JSON value must be an object")
         model = _detect_model(data)
         model.model_validate(data)
-    except (ValueError, ValidationError) as exc:
+    except (TypeError, ValueError, ValidationError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1) from exc
     typer.echo(f"valid: {path} ({data['schema_version']})")

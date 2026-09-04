@@ -8,6 +8,7 @@ Completed:
 
 - Core behavioral evaluator (`models`, `decision`, `metrics`, `state`, `io`, `cli`) with schemas, examples, and CI.
 - One complete task-level loop: Terminal-Bench 2.0 `gpt2-codegolf`, Harbor `codex` / `openai/gpt-5.6-sol`, natural trial + R3 workspace-only continuation, classified `observed_retreat` / `D-observed-retreat`. Curated in `case-studies/gpt2-codegolf/`.
+- Harbor-native integration scaffolding: one-step installer, Paper Orchestra-style `Retreat Auditor` package, lifecycle plugin aliases, deterministic sanitizer, user-facing result command, and five-task E2E harness. Live Harbor/Docker/model execution remains a release gate and is not claimed by local unit tests.
 
 ## Path 1 — Reproduce and harden the Terminal-Bench loop
 

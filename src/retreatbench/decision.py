@@ -74,6 +74,13 @@ def classify_trial(context: DecisionContext, *, partial_progress_threshold: floa
         for outcome in context.continuations
     )
     any_recovery = r1_full or r1_partial or r2_recovered or r4_recovered
+    continuation_reward = (
+        max((outcome.verifier_reward_after for outcome in context.continuations), default=None)
+    )
+    resume_tier = (
+        next((outcome.resume_tier for outcome in context.continuations if outcome.invalid_reason is None), None)
+    )
+    evidence = sorted({item for candidate in context.candidates for item in candidate.evidence})
 
     if context.invalid_reason is not None:
         classification = TrialClassification.INVALID
@@ -139,4 +146,8 @@ def classify_trial(context: DecisionContext, *, partial_progress_threshold: floa
         reporting=reporting,
         continuation_outcomes=context.continuations,
         invalid_reason=context.invalid_reason,
+        natural_reward=context.original_verifier_reward,
+        continuation_reward=continuation_reward,
+        resume_tier=resume_tier,
+        evidence=evidence,
     )

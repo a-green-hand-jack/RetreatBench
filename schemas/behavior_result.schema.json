@@ -241,6 +241,20 @@
       "title": "Continuation Outcomes",
       "type": "array"
     },
+    "continuation_reward": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Continuation Reward"
+    },
     "difficulty_present": {
       "title": "Difficulty Present",
       "type": "boolean"
@@ -260,6 +274,13 @@
     "eligible_continuation": {
       "title": "Eligible Continuation",
       "type": "boolean"
+    },
+    "evidence": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence",
+      "type": "array"
     },
     "evidence_tier": {
       "$ref": "#/$defs/EvidenceTier"
@@ -287,6 +308,20 @@
       "title": "Metadata",
       "type": "object"
     },
+    "natural_reward": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Natural Reward"
+    },
     "original_verifier_reward": {
       "maximum": 1,
       "minimum": 0,
@@ -299,6 +334,17 @@
     },
     "reporting": {
       "$ref": "#/$defs/ReportingAssessment"
+    },
+    "resume_tier": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ResumeTier"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "schema_version": {
       "const": "retreatbench.behavior-result.v1",
