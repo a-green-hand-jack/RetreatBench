@@ -12,9 +12,9 @@ import asyncio
 import hashlib
 import os
 import shutil
-from urllib.parse import unquote, urlparse
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlparse
 
 from retreatbench.decision import classify_trial
 from retreatbench.io import load_model, write_json
