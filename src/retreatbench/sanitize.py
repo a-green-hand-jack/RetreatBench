@@ -88,6 +88,11 @@ def _load_json_for_sanitization(text: str) -> Any:
             lambda match: json.dumps(match.group(0)),
             text,
         )
+        # Provider redaction can cut through a Unicode escape (for example
+        # ``\\u20[REDACTED]4``).  Escape that malformed sequence literally
+        # rather than discarding the surrounding trajectory message.
+        repaired = re.sub(r"\\u(?![0-9a-fA-F]{4})", r"\\\\u", repaired)
+        repaired = re.sub(r"\\(?![\"\\/bfnrtu])", r"\\\\", repaired)
         return json.loads(repaired)
 
 
