@@ -60,6 +60,7 @@ curl -fsSL https://raw.githubusercontent.com/a-green-hand-jack/RetreatBench/main
 ```bash
 harbor run \
   --repo https://huggingface.co/datasets/Jack-Jieke-Wu/Avoidance-Behavior-Exam/tree/<revision>/<task-root> \
+  --path <task-directory-parent> \
   --include-task-name <task-id> \
   -a codex -m gpt-5.6-terra \
   --plugin retreatbench.harbor_plugins:AvoidanceExportBoth

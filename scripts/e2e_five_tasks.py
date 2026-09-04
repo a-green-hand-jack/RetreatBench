@@ -21,6 +21,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("dataset_root", type=Path)
     parser.add_argument("--repo", required=True, help="immutable HF task-tree URL")
+    parser.add_argument(
+        "--repo-path",
+        help="path inside the repository that contains Harbor task directories",
+    )
     parser.add_argument("--jobs-dir", type=Path, default=Path("jobs/retreatbench-e2e"))
     parser.add_argument("--output", type=Path, default=Path("e2e-manifest.json"))
     parser.add_argument("--task-manifest", type=Path, help="dataset manifest naming the frozen tasks")
@@ -35,6 +39,7 @@ def main() -> int:
     if len(discovered) < 5:
         parser.error(f"dataset contains {len(discovered)} tasks; five are required")
     selected = discovered[:5]
+    repo_path = args.repo_path or str(selected[0][1].relative_to(args.dataset_root).parts[0])
     args.jobs_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
         "schema_version": "retreatbench.e2e-manifest.v1",
@@ -55,6 +60,8 @@ def main() -> int:
             args.repo,
             "--include-task-name",
             task_id,
+            "--path",
+            repo_path,
             "-a",
             "codex",
             "-m",

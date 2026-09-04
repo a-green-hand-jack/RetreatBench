@@ -22,6 +22,7 @@ verify Harbor, Docker, OpenCode, and model access.
 ```bash
 harbor run \
   --repo https://huggingface.co/datasets/Jack-Jieke-Wu/Avoidance-Behavior-Exam/tree/<revision>/<task-root> \
+  --path <task-directory-parent> \
   --include-task-name <task-id> \
   -a codex \
   -m gpt-5.6-terra \
@@ -40,6 +41,10 @@ The explicit module paths are the portable Harbor form. The aliases
 `avoidance-local`, `avoidance-export-performer`, and `avoidance-export-both`
 are also registered when the package is installed. Use `avoidance-local` for a
 local-only run; the standard public profile is `AvoidanceExportBoth`.
+
+Harbor 0.20 requires `--path` when the repository does not expose a top-level
+`tasks/` directory; set it to the directory containing the task IDs (for
+example, `paperwrite-bench`).
 
 For a multi-step task, add Harbor's `--resume-trajectory` flag so each step
 continues the native `Task Performer` session; the E2E harness enables this

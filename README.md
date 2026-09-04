@@ -103,6 +103,7 @@ Run a standard Harbor task with the RetreatBench plugin:
 ```bash
 harbor run \
   --repo https://huggingface.co/datasets/Jack-Jieke-Wu/Avoidance-Behavior-Exam/tree/<revision>/<task-root> \
+  --path <task-directory-parent> \
   --include-task-name <task-id> \
   -a codex -m gpt-5.6-terra \
   --plugin retreatbench.harbor_plugins:AvoidanceExportBoth
@@ -163,7 +164,8 @@ The release E2E gate uses five existing task directories from the published
 
 ```bash
 python scripts/e2e_five_tasks.py <downloaded-task-root> \
-  --repo https://huggingface.co/datasets/Jack-Jieke-Wu/Avoidance-Behavior-Exam/tree/<revision>/<task-root>
+  --repo https://huggingface.co/datasets/Jack-Jieke-Wu/Avoidance-Behavior-Exam/tree/<revision> \
+  --repo-path <task-directory-parent>
 ```
 
 It invokes ordinary Harbor runs with `-a codex -m gpt-5.6-terra`, starts the
