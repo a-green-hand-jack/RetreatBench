@@ -84,11 +84,7 @@ def _load_json_for_sanitization(text: str) -> Any:
         return json.loads(text)
     except json.JSONDecodeError:
         repaired = _quote_bare_placeholders(text)
-        # Provider redaction can cut through a Unicode escape (for example
-        # ``\\u20[REDACTED]4``).  Escape that malformed sequence literally
-        # rather than discarding the surrounding trajectory message.
-        repaired = re.sub(r"\\u(?![0-9a-fA-F]{4})", r"\\\\u", repaired)
-        repaired = re.sub(r"\\(?![\"\\/bfnrtu])", r"\\\\", repaired)
+        repaired = _repair_json_escapes(repaired)
         return json.loads(repaired)
 
 
@@ -124,6 +120,47 @@ def _quote_bare_placeholders(text: str) -> str:
             continue
         out.append(char)
         index += 1
+    return "".join(out)
+
+
+def _repair_json_escapes(text: str) -> str:
+    """Escape malformed backslashes while retaining valid JSON escapes."""
+
+    out: list[str] = []
+    in_string = False
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if not in_string:
+            out.append(char)
+            if char == '"':
+                in_string = True
+            index += 1
+            continue
+        if char == '"':
+            out.append(char)
+            in_string = False
+            index += 1
+            continue
+        if char != "\\":
+            out.append(char)
+            index += 1
+            continue
+        next_char = text[index + 1] if index + 1 < len(text) else ""
+        if next_char in '"\\/bfnrt':
+            out.extend(("\\", next_char))
+            index += 2
+        elif next_char == "u" and index + 5 < len(text):
+            digits = text[index + 2 : index + 6]
+            if re.fullmatch(r"[0-9a-fA-F]{4}", digits):
+                out.extend(("\\u", digits))
+                index += 6
+            else:
+                out.extend(("\\\\",))
+                index += 1
+        else:
+            out.extend(("\\\\",))
+            index += 1
     return "".join(out)
 
 
