@@ -83,17 +83,48 @@ def _load_json_for_sanitization(text: str) -> Any:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        repaired = re.sub(
-            r'(?<!["\w])\[(?:REDACTED|PRIVATE_FIELD_REMOVED)\](?!["\w])',
-            lambda match: json.dumps(match.group(0)),
-            text,
-        )
+        repaired = _quote_bare_placeholders(text)
         # Provider redaction can cut through a Unicode escape (for example
         # ``\\u20[REDACTED]4``).  Escape that malformed sequence literally
         # rather than discarding the surrounding trajectory message.
         repaired = re.sub(r"\\u(?![0-9a-fA-F]{4})", r"\\\\u", repaired)
         repaired = re.sub(r"\\(?![\"\\/bfnrtu])", r"\\\\", repaired)
         return json.loads(repaired)
+
+
+def _quote_bare_placeholders(text: str) -> str:
+    """Quote redaction markers only when they occur outside JSON strings."""
+
+    markers = ("[REDACTED]", "[PRIVATE_FIELD_REMOVED]")
+    out: list[str] = []
+    in_string = False
+    escaped = False
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if in_string:
+            out.append(char)
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            index += 1
+            continue
+        if char == '"':
+            in_string = True
+            out.append(char)
+            index += 1
+            continue
+        marker = next((item for item in markers if text.startswith(item, index)), None)
+        if marker is not None:
+            out.append(json.dumps(marker))
+            index += len(marker)
+            continue
+        out.append(char)
+        index += 1
+    return "".join(out)
 
 
 def sanitize_value(value: Any, report: SanitizationReport, key: str | None = None) -> Any:
